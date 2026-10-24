@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Highlander Friends</title>
+<style>
+:root{--bg:#f4f6f3;--card:#fff;--tx:#14201a;--mu:#5d6b63;--ac:#1b8a4b;--bd:#dfe5e0;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{--bg:#0f1512;--card:#18211c;--tx:#e8f0ea;--mu:#93a39a;--ac:#3dd17a;--bd:#2a362f;--bad:#ff7a6b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1512;--card:#18211c;--tx:#e8f0ea;--mu:#93a39a;--ac:#3dd17a;--bd:#2a362f;--bad:#ff7a6b}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;max-width:560px;padding:12px}
+h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
+.mu{color:var(--mu);font-size:14px}.teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button,input,select,textarea,a.btn{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:11px;width:100%;margin:4px 0}
+button,a.btn{cursor:pointer;text-align:center;text-decoration:none;display:block}
+.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tabs button{margin:0}
+.row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}.row select{width:55%;margin:0;padding:6px}
+.row:last-child{border:0}.inl{width:auto;display:inline-block;padding:2px 8px;margin:0}
+textarea{min-height:70px}.bar{height:8px;border-radius:8px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}#thm,#snd{width:44px;height:44px;padding:0;margin:0;border-radius:50%;font-size:22px;line-height:1;flex:none}.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}.cd{text-align:center;border-radius:12px;padding:10px;margin:8px 0;border:1px solid var(--bd);background:var(--bg)}.cd b{font-size:26px;display:block;font-variant-numeric:tabular-nums}.cd span{font-size:13px;color:var(--mu)}.cd.last{border-color:var(--bad);color:var(--bad);animation:pl 1.2s infinite}.cd.closed{border-color:var(--bad);color:var(--bad)}@keyframes pl{50%{opacity:.55}}@media(prefers-reduced-motion:reduce){.cd.last{animation:none}}.pod{text-align:center;border:2px solid #d4a017;background:linear-gradient(180deg,rgba(212,160,23,.18),transparent)}.pod .cup{font-size:72px;line-height:1;animation:bn 1.6s ease-in-out infinite}.pod h2{font-size:22px;margin:6px 0 2px}.pod .nm{display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:700;padding:8px;margin:6px 0;border-radius:12px;background:var(--card);border:1px solid var(--bd)}.pod .nm i{font-style:normal;font-size:30px}@keyframes bn{50%{transform:translateY(-6px) rotate(-4deg)}}@media(prefers-reduced-motion:reduce){.pod .cup{animation:none}}summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
+.gb{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.gb button{width:auto;flex:1 1 40%;margin:0}
+</style>
+</head>
+<body>
+<div class="hd"><h1>⚽ Highlander Friends</h1><div style="display:flex;gap:6px"><button id="snd" type="button" aria-label="Audio"></button><button id="thm" type="button" aria-label="Cambia tema"></button></div></div>
+<div id="app"></div>
+<script>
+const DEF=['Atalanta','Bologna','Cagliari','Como','Fiorentina','Frosinone','Genoa','Inter','Juventus','Lazio','Lecce','Milan','Monza','Napoli','Parma','Roma','Sassuolo','Torino','Udinese','Venezia'];
+let SA=DEF.slice();
+const $=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let jmsg='',cmsg='',bk='',lv='all',fails=0,lockUntil=+(()=>{try{return localStorage.getItem('uiplk')}catch(e){return 0}})()||0,lastAct=Date.now();const PLAYER_ONLY=true;
+let dt={};let S={players:[],rounds:[]},G=null,joined=PLAYER_ONLY,tab='p',armed=null,unlocked=false,lmsg='',msg='',draft={name:'',team:''};
+function gt(g){return g.cfg&&g.cfg.teams&&g.cfg.teams.length>1?g.cfg.teams:DEF}
+function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.repeat((4-b.length%4)%4);const o=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));const mk=(n,d,t)=>({name:String(n||'Partita'),players:[],rounds:[],cfg:{draw:'out',deadline:d||'',teams:Array.isArray(t)&&t.length>1?t:null,maxRounds:0}});
+ if(Array.isArray(o))return o.length?o.map(x=>mk(x.n,x.d,x.t)):null;
+ if(o&&Array.isArray(o.g)&&o.g.length){const r=o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null));r.rules=typeof o.r==='string'?o.r.slice(0,1500):'';return r}return null}catch(e){return null}}
+function pj(){const h=location.hash;return h.indexOf('#jg')===0?dec(h.slice(3)):null}
+function codeOf(s){const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null}
+try{const j=pj();if(j){G={games:j,cur:0,rules:j.rules||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
+try{draft.name=localStorage.getItem('uipname')||'';draft.gname=localStorage.getItem('uipgn')||''}catch(e){}
+const LS=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
+if(!G||!Array.isArray(G.games)||!G.games.length)G={games:[{players:[],rounds:[]}],cur:0};
+G.cur=Math.min(Math.max(0,G.cur|0),G.games.length-1);G.rules=typeof G.rules==='string'?G.rules:'';
+function norm(g){g=g||S;g.name=g.name||'Partita 1';g.players=g.players||[];g.rounds=g.rounds||[];g.cfg=Object.assign({draw:'out',deadline:'',teams:null,maxRounds:0},g.cfg||{});if(g===S)SA=gt(S).slice()}
+G.games.forEach(g=>norm(g));S=G.games[G.cur];norm();
+const save=()=>{try{localStorage.setItem(joined?'uipj':'uipg',JSON.stringify(G))}catch(e){}};
+if(joined)save();
+const cleanN=v=>String(v||'').replace(/[\[\]\n\r]/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
+const gameBy=n=>G.games.find(x=>x.name.toLowerCase()===String(n).trim().toLowerCase());
+const findIn=(g,n)=>g.players.find(p=>p.name.toLowerCase()===n.trim().toLowerCase());
+const canonG=(g,t)=>gt(g).find(x=>x.toLowerCase()===t.trim().toLowerCase());
+function pbase(){try{const v=localStorage.getItem('uipbase');if(v)return v}catch(e){}return location.href.split('#')[0]}
+function pcode(){const T=[],g=G.games.map(x=>{const t=x.cfg.teams&&x.cfg.teams.length>1?x.cfg.teams:null;let k=0;if(t){const j=JSON.stringify(t);k=T.findIndex(y=>JSON.stringify(y)===j)+1;if(!k){T.push(t);k=T.length}}return [x.name,x.cfg.deadline||'',k]});const o={g};if(T.length)o.t=T;if(G.rules)o.r=G.rules;const by=new TextEncoder().encode(JSON.stringify(o));let b='';by.forEach(c=>b+=String.fromCharCode(c));return 'jg'+btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function plink(){return pbase()+'#'+pcode()}
+const isLocal=u=>/^(file|content|blob|about|data|filesystem):/i.test(u)||/^(https?:\/\/)?(localhost|127\.|192\.168\.)/i.test(u);
+function pmsg(){return isLocal(pbase())?'⚽ Highlander Friends\nPer puntare: apri il file Highlander Friends, tocca “Hai un codice invito?” e incolla questo codice:\n\n'+pcode():'⚽ Highlander Friends\nApri il link e scegli la partita su cui puntare:\n'+plink()+'\n\nSe il link non si apre: apri la pagina, tocca “Hai un codice invito?” e incolla questo codice:\n'+pcode()}
+function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;G={games:j,cur:j.length-1,rules:j.rules||''};joined=true;S=G.games[G.cur];norm();draft.team='';alertPh=cdInfo().ph;save();return true}
+function useGame(i){if(!G.games[i])return;G.cur=i;S=G.games[i];norm();draft.team='';armed=null;msg='';cmsg='';alertPh=cdInfo().ph;save();render()}
+function gbar(){if(G.games.length<2)return '';return `<div class="gb">${G.games.map((g,i)=>{const r=g.rounds.find(x=>x.status==='open'),al=g.players.filter(p=>!p.out),d=Date.parse(g.cfg.deadline),left=d-Date.now();
+ const inf=g.players.length?' · '+(tab==='a'&&r?al.filter(p=>r.bets[p.name]).length+'/'+al.length+' puntate':al.length+'/'+g.players.length):'',mk=isNaN(d)?'':left<=0?' 🔒':left<=3600000?' ⚠️':'';
+ return `<button data-a="sg" data-i="${i}" aria-pressed="${i===G.cur}" class="${i===G.cur?'sel':''}">${esc(g.name)}${inf}${mk}</button>`}).join('')}</div>`}
+const sha=async t=>{try{return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of t)h=(h*33^c.charCodeAt(0))>>>0;return 'x'+h}};
+const getPw=()=>{try{return localStorage.getItem('uippw')}catch(e){return null}};
+const setPw=h=>{try{localStorage.setItem('uippw',h)}catch(e){}};
+function lock(){const has=getPw();return `<button class="inl" data-a="gop">← Schermata giocatore</button><div class="card"><h2>${has?'Area admin':'Crea la password admin'}</h2><input id="apw" type="password" placeholder="Password"><button class="sel" data-a="${has?'unlock':'setpw'}">${has?'Entra':'Salva password'}</button><p class="mu">${esc(lmsg)}</p>${has?'':'<p class="mu">Scegli una password e ricordala: ti servirà ogni volta che apri l’area admin.</p>'}</div>`}
+const passes=(r,t)=>!!t&&((r.winners||[]).includes(t)||(S.cfg.draw==='pass'&&(r.draws||[]).includes(t)));
+const dlMs=()=>{const d=S.cfg.deadline,t=d?Date.parse(d):NaN;return isNaN(t)?null:t};
+const fmt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),z=n=>String(n).padStart(2,'0');return (d?d+'g ':'')+z(h)+':'+z(m)+':'+z(s%60)};
+let curPh='none',alertPh=null;
+function cdInfo(){const t=dlMs(),d=S.cfg.deadline;if(t===null)return{ph:'none',html:d?'⏰ Scadenza: '+esc(d):''};
+ const left=t-Date.now(),when=new Date(t).toLocaleString('it-IT',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+ if(left<=0)return{ph:'closed',html:'⏰ Tempo scaduto: puntate chiuse<span>Scadenza: '+esc(when)+'</span>'};
+ const last=left<=3600000;return{ph:last?'last':'open',html:(last?'⚠️ Ultima ora per puntare!':'⏰ Mancano')+'<b>'+fmt(left)+'</b><span>Scadenza: '+esc(when)+'</span>'}}
+const cdBox=()=>{const i=cdInfo();curPh=i.ph;return i.html?`<div class="cd ${i.ph}" id="cd">${i.html}</div>`:''};
+const open=()=>S.rounds.find(r=>r.status==='open');
+const alive=()=>S.players.filter(p=>!p.out);
+const maxR=()=>{const m=parseInt(S.cfg.maxRounds);return m>0?m:0};
+const doneN=()=>S.rounds.filter(r=>r.status==='done').length;
+const noTeams=()=>alive().length>1&&alive().every(p=>SA.every(t=>p.used.includes(t)));
+const ended=()=>!open()&&S.rounds.length>0&&(alive().length<=1||(maxR()>0&&doneN()>=maxR())||noTeams());
+function podium(){const w=alive().map(p=>p.name);if(!w.length)return `<div class="card" style="text-align:center"><h2>Tutti eliminati</h2><p class="mu">Nessun vincitore. Per ricominciare l’admin usa “Altro → Ricomincia questa partita”.</p></div>`;
+ const one=w.length===1;
+ return `<div class="card pod"><div class="cup">🏆</div><h2>${one?'Abbiamo un vincitore!':'Abbiamo '+w.length+' vincitori!'}</h2>${w.map(n=>`<div class="nm"><i>${one?'🥇':'🏅'}</i>${esc(n)}</div>`).join('')}<p class="mu">${one?'Ultimo in piedi: ha vinto il premio.':(noTeams()?'Squadre finite: si dividono il premio':'Turni finiti: si dividono il premio')+(w.length>1?' in '+w.length+' parti uguali':'')+'.'}</p><p class="mu">Per ricominciare l’admin usa “Altro → Ricomincia questa partita”.</p></div>`}
+const joinN=a=>a.length>1?a.slice(0,-1).join(', ')+' e '+a[a.length-1]:(a[0]||'');
+const find=n=>findIn(S,n);
+const canon=t=>SA.find(x=>x.toLowerCase()===t.trim().toLowerCase());
+const gtag=()=>G.games.length>1?S.name:cleanN(draft.gname);
+const text=(n,t)=>`Puntata Highlander Friends${gtag()?' ['+gtag()+']':''}: ${n} -> ${t}`;
+
+function setBet(g,name,team){
+  const r=g.rounds.find(x=>x.status==='open'),p=findIn(g,name),t=canonG(g,team);
+  if(!r)return 'Nessun turno aperto';
+  if(!p)return 'Giocatore sconosciuto: '+name;
+  if(p.out)return p.name+' è eliminato';
+  if(!t)return 'Squadra non valida: '+team;
+  if(p.used.includes(t))return p.name+' ha già usato '+t;
+  r.bets[p.name]=t;return '';
+}
+function statusText(){
+  const r=open(),n=S.rounds.length;
+  let t=`⚽ Highlander Friends${G.games.length>1?' ['+S.name+']':''} — ${r?r.label:'situazione'}${maxR()?' (di '+maxR()+')':''}\nIn gara: ${alive().length}\n`;
+  alive().forEach(p=>t+=`• ${p.name}${p.used.length?' (già usate: '+p.used.join(', ')+')':''}\n`);
+  const d=S.players.filter(p=>p.out);if(d.length)t+='\nEliminati: '+d.map(p=>p.name).join(', ');
+  if(ended()&&alive().length>1)t+='\n\n🏆 Turni finiti! Vincono '+joinN(alive().map(p=>p.name))+' e si dividono il premio';
+  else if(ended()&&alive().length===1)t+='\n\n🏆 Ha vinto '+alive()[0].name+'!';
+  return t;
+}
+const det=(id,t,c)=>`<details class="card" data-d="${id}" ${dt[id]?'open':''}><summary><b>${t}</b></summary>${c}</details>`;
+const DEFRULES='Come si gioca\n• Ad ogni turno scegli una squadra. Se la tua squadra vince, passi al turno successivo.\n• Se la tua squadra non vince sei eliminato. Il pareggio vale come sconfitta o come vittoria secondo la regola scelta dall’organizzatore.\n• Nella stessa partita non puoi usare due volte la stessa squadra.\n• Devi inviare la puntata entro la scadenza: chi non punta è eliminato.\n• Vince l’ultimo rimasto. Se i turni o le squadre finiscono, chi resta si divide il premio in parti uguali.\n• Puoi partecipare a più partite: ognuna ha i suoi turni e le sue squadre usate.';
+const rulesBox=()=>det('rg','📜 Regolamento','<div style="white-space:pre-wrap">'+esc(G.rules||DEFRULES)+'</div>');
+function player(){
+  const ok=draft.name.trim()&&draft.team;
+  return gbar()+`<div class="card"><h2>${G.games.length>1||joined?'Nuova partita? Inserisci il codice invito':'Hai un codice invito?'}</h2><input id="jcd" placeholder="Incolla qui il codice o il messaggio"><button data-a="joinc">Usa codice</button><p class="mu">${esc(jmsg)||'Quando l’organizzatore avvia un’altra partita ti manda un codice: incollalo qui e comparirà tra le partite.'}</p></div>`+(ended()?podium():'')+`<div class="card"><h2>La tua puntata${G.games.length>1?' — '+esc(S.name):''}</h2>${cdBox()}
+   <input id="nm" maxlength="30" placeholder="Il tuo nome" value="${esc(draft.name)}">
+   ${G.games.length<2?`<input id="gn2" maxlength="30" placeholder="Nome della partita (solo se ce n’è più di una)" value="${esc(draft.gname||'')}">`:''}
+   <select id="tm"><option value="">Scegli la squadra…</option>${SA.map(t=>`<option ${t===draft.team?'selected':''}>${t}</option>`).join('')}</select>
+   ${ok&&cdInfo().ph!=='closed'?`<a class="btn sel" href="https://wa.me/?text=${encodeURIComponent(text(draft.name,draft.team))}" target="_blank" rel="noopener">Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p><p class="mu">Se WhatsApp non si apre, copia il messaggio e invialo tu:</p><textarea readonly id="msgp">${esc(text(draft.name,draft.team))}</textarea><button data-a="cpm">Copia messaggio</button><p class="mu">${esc(cmsg)}</p>`:''}</div>`+rulesBox();
+}
+function admin(){
+  const r=open(),n=alive().length;
+  let h=`<button class="inl" data-a="gop">← Schermata giocatore</button>`+gbar();
+  if(!S.players.length){
+    h+=`<div class="card"><h2>Aggiungi i giocatori</h2><input id="pls" placeholder="Nomi separati da virgola"><button class="sel" data-a="addp">Aggiungi</button><p class="mu">I nomi nuovi vengono aggiunti anche in automatico quando importi le puntate.</p></div>`;
+  }else if(ended()){
+    h+=podium();
+  }else if(!r){
+    h+=`<div class="card"><h2>${S.rounds.length?'Turno concluso':'Pronti a partire'}</h2><p class="mu">${n} giocatori in gara${maxR()?' · turni giocati '+doneN()+' su '+maxR():''}</p><button class="sel" data-a="newr">Inizia turno ${S.rounds.length+1}</button></div>`;
+  }else{
+    const got=alive().filter(p=>r.bets[p.name]).length;
+    h+=`<div class="card"><h2>1 · Puntate — ${esc(r.label)}${maxR()?' di '+maxR():''}</h2>
+     <div class="bar"><i style="width:${n?got/n*100:0}%"></i></div><p class="mu" style="margin:4px 0 10px">Ricevute ${got} su ${n}</p>
+     <textarea id="paste" placeholder="Incolla qui i messaggi di WhatsApp"></textarea><button class="sel" data-a="imp">Importa puntate</button>
+     <p class="mu">${Array.isArray(msg)?msg.map(esc).join('<br>'):esc(msg)}</p>`+
+     alive().map(p=>`<div class="row"><span>${r.bets[p.name]?'✅':'⏳'} ${esc(p.name)}</span><select data-bet="${esc(p.name)}"><option value="">— scegli —</option>${SA.filter(t=>!p.used.includes(t)).map(t=>`<option ${r.bets[p.name]===t?'selected':''}>${t}</option>`).join('')}</select></div>`).join('')+
+     `<p class="mu">Puoi correggere a mano la squadra di ognuno dal menu.</p></div>`;
+    if(got){
+      const w=r.winners||[],dr=r.draws||[],dp=S.cfg.draw==='pass',cnt={};alive().forEach(p=>{const t=r.bets[p.name];if(t)cnt[t]=(cnt[t]||0)+1});
+      const pass=alive().filter(p=>passes(r,r.bets[p.name])),out=alive().filter(p=>!pass.includes(p));
+      const nob=alive().filter(p=>!r.bets[p.name]).map(p=>p.name),lose=Object.keys(cnt).filter(t=>!w.includes(t)&&!(dp&&dr.includes(t))).sort();
+      const warn=(!pass.length?'<br>⚠️ Nessuna squadra passa: verranno eliminati tutti.':'')+(nob.length?'<br>⚠️ Senza puntata (eliminati): '+esc(nob.join(', ')):'')+(lose.length?'<br>Squadre che non passano: '+esc(lose.join(', ')):'');
+      h+=`<div class="card"><h2>2 · Risultati</h2><p class="mu">Tocca le squadre che hanno vinto${dp?' (secondo tocco: pareggio, passa comunque)':''}.</p>
+       <div class="teams">${Object.keys(cnt).sort().map(t=>`<button data-w="${t}" class="${w.includes(t)?'sel':''}" ${dp&&dr.includes(t)?'style="border-color:var(--ac);border-style:dashed"':''}>${t}${w.includes(t)?' ✓':(dp&&dr.includes(t)?' =':'')} (${cnt[t]})</button>`).join('')}</div>
+       <p class="mu">✅ Passano (${pass.length}): ${esc(pass.map(p=>p.name).join(', ')||'—')}<br>❌ Eliminati (${out.length}): ${esc(out.map(p=>p.name).join(', ')||'—')}</p>
+       ${warn?'<p class="mu">'+warn.slice(4)+'</p>':''}<button class="sel" data-a="done">${armed==='done'?'Tocca ancora per confermare':'Chiudi turno'}</button></div>`;
+    }
+  }
+  if(S.players.length){
+    const L=lv==='alive'?alive():S.players;
+    h+=`<div class="card"><h2>Giocatori</h2><div class="tabs"><button data-a="lv" data-v="all" class="${lv==='all'?'sel':''}">Tutti (${S.players.length})</button><button data-a="lv" data-v="alive" class="${lv==='alive'?'sel':''}">Rimasti (${n})</button></div><div style="margin-top:8px">`+
+     (L.map(p=>`<div class="row"><span>${p.out?'🔴':'🟢'} ${esc(p.name)}</span><span class="mu" style="text-align:right">${p.out?'Eliminato · '+esc(p.out):(p.used.length?'Usate: '+esc(p.used.join(', ')):'Nessuna squadra usata')}</span></div>`).join('')||'<p class="mu">Nessun giocatore rimasto.</p>')+`</div></div>`;
+  }
+  const st=statusText();
+  h+=extra();h+=det('ot','Altro',
+   `<b>Giocatori</b>`+(S.players.map((p,i)=>`<div class="row"><span>${p.out?'🔴':'🟢'} ${esc(p.name)}</span><span class="mu">${p.out?esc(p.out):esc(p.used.join(', '))}<button class="inl" data-a="delp" data-i="${i}">${armed==='d'+i?'Sicuro?':'✕'}</button></span></div>`).join('')||'<p class="mu">Nessun giocatore.</p>')+
+   `${S.players.length?'<input id="pls" placeholder="Aggiungi nomi separati da virgola"><button data-a="addp">Aggiungi</button>':''}
+    <hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><b>Situazione per il gruppo</b>
+    <textarea readonly id="st">${esc(st)}</textarea><a class="btn sel" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(st)}">Invia su WhatsApp</a>
+    <hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><b>Password</b>
+    <input id="npw" type="password" placeholder="Nuova password"><button data-a="chpw">Cambia password</button><p class="mu">${esc(lmsg)}</p>
+    <hr style="border:0;border-top:1px solid var(--bd);margin:14px 0"><b>Ricomincia questa partita</b><button data-a="newgame" class="sel">${armed==='newgame'?'Tocca ancora: azzera turni e puntate':'Ricomincia da zero (stessi giocatori)'}</button><p class="mu">Tiene giocatori, squadre e impostazioni: tutti tornano in gioco e i turni ripartono da zero.</p><button data-a="reset" style="color:var(--bad)">${armed==='reset'?'Tocca ancora: cancella questa partita':'Cancella giocatori e turni di questa partita'}</button>`);
+  return h;
+}
+function extra(){
+ const hr='<hr style="border:0;border-top:1px solid var(--bd);margin:14px 0">',pl=plink();
+ const gm=det('gm','Partite ('+G.games.length+')',`<p class="mu">Ogni partita ha turni, eliminati, squadre usate e scadenza indipendenti: puoi avviarne quante vuoi in parallelo e gli stessi giocatori possono partecipare a tutte.</p><b>Nuova partita</b><input id="gnn" maxlength="30" placeholder="Nome (es. Partita ${G.games.length+1})"><select id="gpl"><option value="copy">Con tutti i giocatori di questa partita</option><option value="alive">Solo con quelli ancora in gara</option><option value="empty">Senza giocatori</option></select><button class="sel" data-a="newgm">Crea e passa alla nuova partita</button><p class="mu">Squadre, regola del pareggio e turni massimi vengono copiati da questa partita; la scadenza no.</p>${hr}<b>Questa partita: ${esc(S.name)}</b><input id="gnr" maxlength="30" value="${esc(S.name)}"><button data-a="rng">Rinomina</button>${G.games.length>1?`<button data-a="pull">Aggiungi i giocatori delle altre partite</button><button data-a="delg" style="color:var(--bad)">${armed==='delg'?'Tocca ancora: elimina questa partita':'Elimina questa partita'}</button>`:''}${hr}<b>Invito per i giocatori</b><b class="mu" style="display:block;font-weight:600;margin-top:6px">Indirizzo della pagina (quello che i giocatori possono aprire)</b><input id="pbs" inputmode="url" value="${esc(pbase())}"><p class="mu">${isLocal(pbase())?'⚠️ Questo è un file sul tuo telefono: gli altri non possono aprirlo con un link, quindi nel messaggio va solo il codice. I giocatori devono avere il file e incollare il codice. Se la pagina è online, incolla qui il suo indirizzo pubblico per avere anche il link.':'Controlla che sia l’indirizzo che i giocatori possono aprire.'}</p><textarea readonly id="plk">${esc(pmsg())}</textarea><button data-a="cplk">Copia messaggio</button><a class="btn sel" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(pmsg())}">Invia su WhatsApp</a><button data-a="shr">Condividi (scegli l’app)</button><button data-a="cpcd">Copia solo il codice invito</button><p class="mu">Chi riceve il messaggio apre la pagina (o il file), tocca “Hai un codice invito?” e incolla il codice. Se non funziona, il giocatore può scrivere a mano il nome della partita (es. “${esc(S.name)}”) nel campo sopra la squadra: il messaggio parte con quel nome e lo importi normalmente. Se cambi nomi, squadre o scadenze, rimandalo.</p><p class="mu">${esc(cmsg)}</p>`);
+ const last=S.rounds[S.rounds.length-1],canUndo=last&&last.status==='done'&&last.snap,done=S.rounds.filter(r=>r.status==='done');
+ return gm+det('cf','Impostazioni',`<b>Scadenza puntate</b><input id="dl" type="datetime-local" value="${esc(dlMs()===null?'':S.cfg.deadline)}"><button data-a="cld">Rimuovi scadenza</button><p class="mu">I giocatori vedono il conto alla rovescia. Nell’ultima ora compare l’avviso (con un bip se la pagina è aperta) e allo scadere il pulsante di invio sparisce.</p><b>Numero massimo di turni</b><input id="mr" type="number" min="0" inputmode="numeric" placeholder="Nessun limite" value="${maxR()||''}"><p class="mu">Se finiti i turni restano più giocatori, vincono tutti e si dividono il premio. Lascia vuoto per nessun limite: in ogni caso la partita finisce anche quando i giocatori rimasti hanno usato tutte le squadre.</p><b>Se la partita finisce in pareggio</b><select id="dr"><option value="out" ${S.cfg.draw!=='pass'?'selected':''}>Il pareggio elimina</option><option value="pass" ${S.cfg.draw==='pass'?'selected':''}>Il pareggio fa passare</option></select><b>Squadre (una per riga)</b><textarea id="tms" style="min-height:140px">${esc(SA.join('\n'))}</textarea><button data-a="svt">Salva squadre</button><button data-a="deft">Ripristina Serie A 2026/27</button><b>Regolamento (visibile ai giocatori)</b><textarea id="rgt" style="min-height:200px">${esc(G.rules||DEFRULES)}</textarea><button data-a="svr">Salva regolamento</button><button data-a="dfr">Ripristina testo base</button><p class="mu">Dopo averlo modificato manda di nuovo il codice invito: i giocatori vedono il nuovo testo quando lo incollano.</p><p class="mu">${esc(cmsg)}</p>`)
+ +det('hi','Storico turni',done.map(r=>`<p><b>${esc(r.label)}</b> <span class="mu">vincenti: ${esc((r.winners||[]).join(', ')||'—')}${S.cfg.draw==='pass'&&(r.draws||[]).length?' · pari: '+esc(r.draws.join(', ')):''}</span></p>`+Object.keys(r.res||r.bets).map(n=>`<div class="row"><span>${r.res&&r.res[n]?'✅':'❌'} ${esc(n)}</span><span class="mu">${esc(r.bets[n]||'nessuna puntata')}</span></div>`).join('')).join('')||'<p class="mu">Nessun turno concluso.</p>')
+ +det('tl','Strumenti',`<b>Annulla ultimo turno</b><button data-a="undo" ${canUndo?'':'disabled'}>${armed==='undo'?'Tocca ancora per annullare':'Annulla ultimo turno'+(canUndo?' ('+esc(last.label)+')':'')}</button><p class="mu">Riapre l’ultimo turno chiuso.</p>`)
+ +det('bk','Backup',`<p class="mu">Copia il testo e conservalo (es. in un messaggio a te stesso). La password non è inclusa.</p><textarea readonly id="st2">${esc(JSON.stringify(G))}</textarea><button data-a="cpbk">Copia backup</button><b>Ripristina</b><textarea id="bki" placeholder="Incolla qui il backup">${esc(bk)}</textarea><button data-a="rsbk">${armed==='rsbk'?'Tocca ancora: sostituisce tutti i dati':'Ripristina backup'}</button><p class="mu">${esc(cmsg)}</p>`);
+}
+function lockBack(){return ''}
+function render(){if(PLAYER_ONLY&&tab==='a')tab='p';
+  const a=document.activeElement;
+  if(a&&['INPUT','SELECT','TEXTAREA'].includes(a.tagName)&&!['st','st2','plk','msgp'].includes(a.id))return;
+  $.innerHTML=(LS?'':'<div class="card"><b>⚠️ Dati non salvabili</b><p class="mu">Questo browser non permette di salvare i dati: chiudendo la pagina si perde tutto. Apri il file con Chrome (non dall’anteprima di WhatsApp o dal gestore file).</p></div>')+(tab==='p'?player():(unlocked?admin():lock()));
+}
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='tm'){draft.team=t.value;t.blur();render()}
+  else if(t.id==='pbs'){t.blur();render()}
+  else if(t.id==='dr'){if(!unlocked)return;S.cfg.draw=t.value==='pass'?'pass':'out';save();t.blur();render()}
+  else if(t.dataset.bet!==undefined){if(!unlocked)return;const r=open();armed=null;if(t.value)r.bets[t.dataset.bet]=t.value;else delete r.bets[t.dataset.bet];save();t.blur();render()}
+});
+document.addEventListener('input',e=>{if(e.target.id==='dl'&&unlocked){S.cfg.deadline=e.target.value.slice(0,80);save()}if(e.target.id==='mr'&&unlocked){S.cfg.maxRounds=Math.max(0,Math.min(99,parseInt(e.target.value)||0));save()}if(e.target.id==='pbs'&&unlocked){try{localStorage.setItem('uipbase',e.target.value.trim().split('#')[0].slice(0,500))}catch(x){}}if(e.target.id==='gn2'){draft.gname=e.target.value;try{localStorage.setItem('uipgn',draft.gname)}catch(x){}}if(e.target.id==='nm'){draft.name=e.target.value;try{localStorage.setItem('uipname',draft.name)}catch(x){}}});
+document.addEventListener('focusout',e=>{if(e.target.id==='nm'||e.target.id==='gn2')setTimeout(render,50)});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||e.target.id!=='apw')return;const b=document.querySelector('[data-a=unlock],[data-a=setpw]');if(b){e.preventDefault();b.click()}});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const ae=document.activeElement;if(ae&&ae!==b&&ae.blur)ae.blur();
+  if(b.dataset.a==='goadmin'||b.dataset.a==='gop'){tab=b.dataset.a==='goadmin'?'a':'p';armed=null;if(tab==='p')unlocked=false;render();return}
+  if(PLAYER_ONLY&&(b.dataset.a==='goadmin'||b.dataset.a==='unlock'||b.dataset.a==='setpw'))return;
+  if(b.dataset.a==='sg'){useGame(+b.dataset.i);return}
+  if(b.dataset.a==='cpm'){try{await navigator.clipboard.writeText(text(draft.name,draft.team));cmsg='Messaggio copiato ✅'}catch(x){const t=document.getElementById('msgp');if(t){t.focus();t.select()}cmsg='Seleziona il testo e copialo a mano'}render();return}
+  if(b.dataset.a==='joinc'){const el=document.getElementById('jcd');jmsg=joinCode(el&&el.value)?'Codice accettato ✅ Ora sei in «'+S.name+'»':'Codice non valido: incollalo di nuovo per intero';render();return}
+  if((b.dataset.a==='unlock'||b.dataset.a==='setpw')&&tab!=='a')return;
+  if(!unlocked&&b.dataset.a!=='unlock'&&b.dataset.a!=='setpw')return;
+  if(!['done','reset','newgame','delp','undo','rsbk','delg'].includes(b.dataset.a))armed=null;
+  cmsg='';
+  const r=open();
+  if(b.dataset.a==='setpw'){const v=document.getElementById('apw').value;if(getPw())return;if(v.length<4)lmsg='Almeno 4 caratteri';else{setPw(await sha(v));unlocked=true;lmsg=''}}
+  else if(b.dataset.a==='unlock'){
+    const now=Date.now();
+    if(now<lockUntil)lmsg='Troppi tentativi: riprova tra '+Math.ceil((lockUntil-now)/1000)+' secondi';
+    else if(await sha(document.getElementById('apw').value)===getPw()){unlocked=true;lmsg='';fails=0}
+    else{fails++;if(fails>=5){fails=0;lockUntil=now+60000;try{localStorage.setItem('uiplk',lockUntil)}catch(e){}lmsg='Troppi tentativi: attendi 1 minuto'}else lmsg='Password errata'}}
+  else if(b.dataset.a==='chpw'){const v=document.getElementById('npw').value;if(v.length>=4){setPw(await sha(v));lmsg='Password cambiata'}else lmsg='Almeno 4 caratteri'}
+  else if(b.dataset.w){const w=r.winners||(r.winners=[]),d=r.draws||(r.draws=[]),t=b.dataset.w;if(w.includes(t)){w.splice(w.indexOf(t),1);if(S.cfg.draw==='pass')d.push(t)}else if(d.includes(t))d.splice(d.indexOf(t),1);else w.push(t);save()}
+  else if(b.dataset.a==='lv'){lv=b.dataset.v==='alive'?'alive':'all'}
+  else if(b.dataset.a==='cld'){S.cfg.deadline='';save()}
+  else if(b.dataset.a==='svt'){const l=[...new Set(document.getElementById('tms').value.split(/[\n,]/).map(x=>x.trim()).filter(Boolean))];if(l.length<2)cmsg='Servono almeno 2 squadre';else{S.cfg.teams=l;norm();save();cmsg='Squadre salvate ('+l.length+')'}}
+  else if(b.dataset.a==='svr'){const v=document.getElementById('rgt').value.trim().slice(0,1500);G.rules=v===DEFRULES?'':v;save();cmsg='Regolamento salvato'}
+  else if(b.dataset.a==='dfr'){G.rules='';save();cmsg='Testo base ripristinato'}
+  else if(b.dataset.a==='deft'){S.cfg.teams=null;norm();save();cmsg='Elenco ripristinato'}
+  else if(b.dataset.a==='undo'){const l=S.rounds[S.rounds.length-1];if(!l||l.status!=='done'||!l.snap){}else if(armed!=='undo')armed='undo';else{S.players=JSON.parse(l.snap);l.status='open';delete l.snap;delete l.res;armed=null;save()}}
+  else if(b.dataset.a==='cpbk'){try{await navigator.clipboard.writeText(JSON.stringify(G));cmsg='Backup copiato ✅'}catch(e){const t=document.getElementById('st2');t.focus();t.select();cmsg='Seleziona il testo e copialo a mano'}}
+  else if(b.dataset.a==='rsbk'){if(armed!=='rsbk'){bk=document.getElementById('bki').value;armed='rsbk'}else{try{const o=JSON.parse(bk);if(Array.isArray(o.games)&&o.games.length)G={games:o.games,cur:0};else if(Array.isArray(o.players)&&Array.isArray(o.rounds)){o.name=S.name;G.games[G.cur]=o}else throw 0;G.games.forEach(g=>norm(g));G.rules=typeof G.rules==='string'?G.rules:'';G.cur=Math.min(G.cur,G.games.length-1);S=G.games[G.cur];norm();save();bk='';cmsg='Backup ripristinato ✅'}catch(e){cmsg='Backup non valido'}armed=null}}
+  else if(b.dataset.a==='addp'){document.getElementById('pls').value.split(',').map(x=>x.trim()).filter(x=>x&&!find(x)).forEach(n=>S.players.push({name:n,out:null,used:[]}));save()}
+  else if(b.dataset.a==='delp'){const k='d'+b.dataset.i;if(armed!==k){armed=k}else{S.players.splice(+b.dataset.i,1);armed=null;save()}}
+  else if(b.dataset.a==='newr'){if(ended())return render();S.rounds.push({label:'Turno '+(S.rounds.length+1),status:'open',bets:{},winners:[]});save()}
+  else if(b.dataset.a==='imp'){
+    const rep=[];
+    document.getElementById('paste').value.split('\n').forEach(l=>{
+      const m=l.match(/Puntata (?:Highlander Friends|Ultimo in Piedi)(?:\s*\[(.+?)\])?:\s*(.+?)\s*(?:->|→)\s*(.+?)\s*$/i);if(!m)return;
+      const g=m[1]?gameBy(m[1]):S,nm=m[2].trim(),tm=m[3].trim();
+      if(!g){rep.push(nm+' → '+tm+' ❌ Partita sconosciuta: '+m[1].trim()+' (esistenti: '+G.games.map(x=>x.name).join(', ')+')');return}
+      const tag=g!==S?' ['+g.name+']':(!m[1]&&G.games.length>1?' [in '+g.name+']':'');
+      if(!canonG(g,tm)){rep.push(nm+' → '+tm+tag+' ❌ Squadra non valida');return}
+      let add='';if(!findIn(g,nm)){g.players.push({name:nm,out:null,used:[]});add=' (nuovo giocatore)'}
+      const er=setBet(g,nm,tm),p=findIn(g,nm);
+      rep.push(p.name+' → '+canonG(g,tm)+tag+add+(er?' ❌ '+er:' ✅'))});
+    msg=rep.length?rep:'Nessuna puntata trovata nel testo incollato.';save()}
+  else if(b.dataset.a==='newgm'){const raw=cleanN(document.getElementById('gnn').value)||('Partita '+(G.games.length+1));let nm=raw,k=2;while(gameBy(nm))nm=raw+' '+k++;const cp=document.getElementById('gpl').value;const cpv=cp==='empty'?'':cp;
+    const g={name:nm,players:cpv?S.players.filter(p=>cpv==='copy'||!p.out).map(p=>({name:p.name,out:null,used:[]})):[],rounds:[],cfg:{draw:S.cfg.draw,deadline:'',teams:S.cfg.teams?S.cfg.teams.slice():null,maxRounds:S.cfg.maxRounds}};
+    G.games.push(g);G.cur=G.games.length-1;S=g;norm();alertPh=cdInfo().ph;msg='';save();cmsg='Creata «'+nm+'»: ora sei in questa partita'}
+  else if(b.dataset.a==='rng'){const v=cleanN(document.getElementById('gnr').value),o=v&&gameBy(v);if(!v)cmsg='Nome non valido';else if(o&&o!==S)cmsg='Esiste già una partita con questo nome';else{S.name=v;save();cmsg='Rinominata'}}
+  else if(b.dataset.a==='pull'){let n=0;G.games.forEach(g=>{if(g!==S)g.players.forEach(p=>{if(!find(p.name)){S.players.push({name:p.name,out:null,used:[]});n++}})});save();cmsg=n?n+' giocatori aggiunti':'Nessun giocatore nuovo da aggiungere'}
+  else if(b.dataset.a==='delg'){if(G.games.length<2){}else if(armed!=='delg')armed='delg';else{G.games.splice(G.cur,1);G.cur=0;S=G.games[0];norm();alertPh=cdInfo().ph;armed=null;save()}}
+  else if(b.dataset.a==='shr'){try{if(navigator.share)await navigator.share({text:pmsg()});else cmsg='Condivisione non disponibile: usa “Copia messaggio”'}catch(e){}}
+  else if(b.dataset.a==='cpcd'){try{await navigator.clipboard.writeText(pcode());cmsg='Codice copiato ✅'}catch(e){cmsg='Copia a mano il testo dal messaggio'}}
+  else if(b.dataset.a==='cplk'){try{await navigator.clipboard.writeText(pmsg());cmsg='Messaggio copiato ✅'}catch(e){const t=document.getElementById('plk');t.focus();t.select();cmsg='Seleziona il testo e copialo a mano'}}
+  else if(b.dataset.a==='done'){
+    if(armed!=='done'){armed='done'}else{
+      r.snap=JSON.stringify(S.players);r.res={};alive().forEach(p=>{const t=r.bets[p.name];r.res[p.name]=passes(r,t);if(passes(r,t))p.used.push(t);else p.out=r.label+(t?' ('+t+')':' (nessuna puntata)')});
+      r.status='done';armed=null;msg='';save()}}
+  else if(b.dataset.a==='newgame'){if(armed!=='newgame'){armed='newgame'}else{S.players.forEach(p=>{p.out=null;p.used=[]});S.rounds=[];armed=null;msg='';save()}}
+  else if(b.dataset.a==='reset'){if(armed!=='reset'){armed='reset'}else{G.games[G.cur]=S={name:S.name,players:[],rounds:[],cfg:S.cfg};armed=null;save()}}
+  render();
+});
+try{if(sessionStorage.getItem('uipga')){sessionStorage.removeItem('uipga');if(!joined)tab='a'}}catch(e){}
+if(location.hash==='#admin'&&!joined)tab='a';
+addEventListener('hashchange',()=>{if(location.hash==='#admin'&&!joined){tab='a';armed=null;render()}});
+let taps=0,tapT=0;
+document.querySelector('h1').addEventListener('click',()=>{const n=Date.now();taps=n-tapT<1500?taps+1:1;tapT=n;if(taps>=5){taps=0;if(joined){if(PLAYER_ONLY)return;let has=false;try{has=!!localStorage.getItem('uipg')}catch(x){}if(has){try{sessionStorage.setItem('uipga','1')}catch(x){}try{history.replaceState(null,'',location.href.split('#')[0])}catch(x){}location.reload()}return}tab='a';armed=null;render()}});
+['click','input','change'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now()},true));
+setInterval(()=>{if(unlocked&&Date.now()-lastAct>300000){unlocked=false;tab='p';armed=null;lmsg='';const a=document.activeElement;if(a&&a.blur)a.blur();render()}},15000);
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+function paintTheme(){document.getElementById('snd').textContent=muted?'🔇':'🔊';const b=document.getElementById('thm');b.textContent=isDark()?'☀️':'🌙';b.title=isDark()?'Passa al tema chiaro':'Passa al tema scuro'}
+let muted=false;try{muted=localStorage.getItem('uimute')==='1'}catch(e){}
+let ac=null;
+function blip(dark){if(muted)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+ const n=ac.currentTime,f=dark?[660,440]:[440,660];
+ f.forEach((hz,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=n+i*0.09;o.type='sine';o.frequency.value=hz;
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.08,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);
+  o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+0.18)})}catch(e){}}
+try{const st=localStorage.getItem('uitheme');if(st)document.documentElement.dataset.theme=st}catch(e){}
+document.getElementById('thm').addEventListener('click',e=>{e.stopPropagation();const d=!isDark();document.documentElement.dataset.theme=d?'dark':'light';try{localStorage.setItem('uitheme',d?'dark':'light')}catch(x){}paintTheme();blip(d)});
+document.getElementById('snd').addEventListener('click',e=>{e.stopPropagation();muted=!muted;try{localStorage.setItem('uimute',muted?'1':'0')}catch(x){}paintTheme();blip(isDark())});
+paintTheme();
+render();
+alertPh=cdInfo().ph;
+setInterval(()=>{const i=cdInfo();
+ if((alertPh==='open'&&i.ph==='last')||(alertPh==='last'&&i.ph==='closed')){blip(true);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}
+ alertPh=i.ph;
+ if(tab==='p'&&i.ph!==curPh){render();return}
+ const el=document.getElementById('cd');if(el&&i.html&&i.ph===curPh)el.innerHTML=i.html},1000);
+</script>
+</body>
+</html>
