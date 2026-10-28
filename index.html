@@ -18,7 +18,8 @@ button,a.btn{cursor:pointer;text-align:center;text-decoration:none;display:block
 .sel{background:var(--ac);color:#fff;border-color:var(--ac)}
 a.btn.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
 :root[data-theme="dark"] .sel{color:#07210f}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sel{color:#07210f}}
-.teams button{margin:0;padding:12px 6px}.teams button.used{text-decoration:line-through;opacity:.5}button:disabled{opacity:.5;cursor:default}.step{font-weight:700;margin:16px 0 6px}.sendbar{position:sticky;bottom:0;background:var(--card);padding:8px 0 env(safe-area-inset-bottom,0px);margin-top:10px}.sendbar p{margin:4px 0 0}details.sub summary{color:var(--mu);font-size:14px;margin-top:6px}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tabs button{margin:0}
+.teams button{margin:0;padding:12px 6px}.teams button.lock{opacity:.55}
+.teams button.used{text-decoration:line-through;opacity:.5}button:disabled{opacity:.5;cursor:default}.step{font-weight:700;margin:16px 0 6px}.sendbar{position:sticky;bottom:0;background:var(--card);padding:8px 0 env(safe-area-inset-bottom,0px);margin-top:10px}.sendbar p{margin:4px 0 0}details.sub summary{color:var(--mu);font-size:14px;margin-top:6px}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tabs button{margin:0}
 .row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd)}.row select{width:55%;margin:0;padding:6px}
 .row:last-child{border:0}.inl{width:auto;display:inline-block;padding:2px 8px;margin:0}
 textarea{min-height:70px}.bar{height:8px;border-radius:8px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}#thm,#snd{width:44px;height:44px;padding:0;margin:0;border-radius:50%;font-size:22px;line-height:1;flex:none}.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}.cd{text-align:center;border-radius:12px;padding:10px;margin:8px 0;border:1px solid var(--bd);background:var(--bg)}.cd b{font-size:26px;display:block;font-variant-numeric:tabular-nums}.cd span{font-size:13px;color:var(--mu)}.cd.last{border-color:var(--bad);color:var(--bad);animation:pl 1.2s infinite}.cd.closed{border-color:var(--bad);color:var(--bad)}@keyframes pl{50%{opacity:.55}}@media(prefers-reduced-motion:reduce){.cd.last{animation:none}}.pod{text-align:center;border:2px solid #d4a017;background:linear-gradient(180deg,rgba(212,160,23,.18),transparent)}.pod .cup{font-size:72px;line-height:1;animation:bn 1.6s ease-in-out infinite}.pod h2{font-size:22px;margin:6px 0 2px}.pod .nm{display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:700;padding:8px;margin:6px 0;border-radius:12px;background:var(--card);border:1px solid var(--bd)}.pod .nm i{font-style:normal;font-size:30px}@keyframes bn{50%{transform:translateY(-6px) rotate(-4deg)}}@media(prefers-reduced-motion:reduce){.pod .cup{animation:none}}summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
@@ -50,7 +51,7 @@ G.cur=Math.min(Math.max(0,G.cur|0),G.games.length-1);G.rules=typeof G.rules==='s
 const gidOf=g=>g.id||'';
 const fbBase=()=>String(G.fb||'').trim().replace(/\/+$/,'');
 const pidOf=n=>String(n).trim().toLowerCase().replace(/[.$#\[\]\/\s]+/g,'_').slice(0,40)||'_';
-let fbLog=[],fbDirty=false,fbBusy=false,fbmsg='',fbSending=false;
+let fbLog=[],fbDirty=false,fbBusy=false,fbmsg='',fbSending=false,rsClosed=false,rsFor='',toastT=0;
 function norm(g){g=g||S;g.name=g.name||'Partita 1';g.players=g.players||[];g.rounds=g.rounds||[];g.cfg=Object.assign({draw:'out',deadline:'',teams:null,maxRounds:0},g.cfg||{});if(g===S)SA=gt(S).slice()}
 G.games.forEach(g=>norm(g));S=G.games[G.cur];norm();
 const save=()=>{try{localStorage.setItem(joined?'uipj':'uipg',JSON.stringify(G))}catch(e){}};
@@ -132,20 +133,20 @@ function usedBox(){if(!draft.name.trim())return '';const u=urec();if(!u.used.len
  return det('us','🗂 Le mie squadre già usate ('+u.used.length+')',(u.pend?`<p class="mu">Ultima puntata: <b>${esc(u.pend.t)}</b>. Finché il turno è aperto puoi ancora cambiarla.</p><button data-a="cfu">Turno finito: segna ${esc(u.pend.t)} come usata</button>`:'')+(u.used.map((t,i)=>`<div class="row"><span>${esc(t)}</span><button class="inl" data-a="rmu" data-i="${i}" aria-label="Rimuovi ${esc(t)}">✕</button></div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+'<p class="mu">Se hai segnato una squadra per errore, tocca ✕.</p>')}
 function player(){
   const us=usedTeams();if(us.includes(draft.team))draft.team='';
-  const nm=draft.name.trim(),ok=!!(nm&&draft.team),closed=cdInfo().ph==='closed',u=nm?urec():null,multi=G.games.length>1;
+  const nm=draft.name.trim(),ok=!!(nm&&draft.team),lk=lockKind(),closed=!!lk,u=nm?urec():null,multi=G.games.length>1;
   const online=!!(fbBase()&&S.id),waHref='https://wa.me/?text='+encodeURIComponent(text(draft.name,draft.team));
   const send=ok&&!closed
    ?(online?`<button class="sel" data-a="fbsend" ${fbSending?'disabled':''}>📲 Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
-     :`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">📲 Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p>`)
-   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${closed?'⏰ Puntate chiuse: aspetta il prossimo turno.':!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
+     :`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">📲 Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p><p class="mu" style="color:#b45309">⚠️ Invio online non attivo: ${!fbBase()?'il codice usato non contiene il collegamento al database':'questa partita non ha un ID'}. Chiedi all’organizzatore di rimandarti il link invito aggiornato e riaprilo (oppure incollane il codice qui sotto in “Hai un codice invito?”).</p>`)
+   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
   return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')
    +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar():'')
    +(ended()?podium():'')
-   +`<div class="card"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${cdBox()}
+   +`<div class="card"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
    <div class="step" style="margin-top:4px">1 · Il tuo nome</div>
    <input id="nm" maxlength="30" placeholder="Scrivi il tuo nome" value="${esc(draft.name)}">
    <div class="step">2 · Scegli la squadra</div>
-   <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" ${x?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
+   <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" ${x?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
    <div class="sendbar"><div class="step" style="margin:0 0 4px">3 · Invia</div>${send}</div>
    ${u&&u.pend?`<p class="mu">Ultima puntata inviata: <b>${esc(u.pend.t)}</b></p>`:''}
    ${ok&&!closed?`<details class="sub" data-d="cp" ${dt.cp?'open':''}><summary>${online?'Preferisci WhatsApp?':'WhatsApp non si apre?'}</summary>${online?`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">Invia su WhatsApp</a>`:''}<p class="mu">Copia il messaggio e mandalo tu all’organizzatore:</p><textarea readonly id="msgp">${esc(text(draft.name,draft.team))}</textarea><button data-a="cpm">Copia messaggio</button><p class="mu">${esc(cmsg)}</p></details>`:''}</div>`
@@ -232,7 +233,7 @@ document.addEventListener('click',async e=>{
   if(PLAYER_ONLY&&(b.dataset.a==='goadmin'||b.dataset.a==='unlock'||b.dataset.a==='setpw'))return;
   if(b.dataset.a==='sg'){useGame(+b.dataset.i);return}
   if(b.dataset.a==='fbsend'){fbSend();return}
-  if(b.dataset.a==='pk'){draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
+  if(b.dataset.a==='pk'){const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
   if(b.dataset.a==='cfu'){const o=uall(),k=ukey(),r=urec();if(r.pend){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}render();return}
   if(b.dataset.a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
   if(b.dataset.a==='cpm'){recordSend();try{await navigator.clipboard.writeText(text(draft.name,draft.team));cmsg='Messaggio copiato ✅'}catch(x){const t=document.getElementById('msgp');if(t){t.focus();t.select()}cmsg='Seleziona il testo e copialo a mano'}render();return}
@@ -321,9 +322,11 @@ setInterval(()=>{const i=cdInfo();
  if(tab==='p'&&i.ph!==curPh){render();return}
  const el=document.getElementById('cd');if(el&&i.html&&i.ph===curPh)el.innerHTML=i.html},1000);
 
-function fbClear(){}
+async function fbClear(){}
+async function fbState(){}
 async function fbSend(){
  const nm=cleanN(draft.name),tm=draft.team;if(!nm||!tm||fbSending||!fbBase()||!S.id)return;
+ await fbRS();{const lk=lockKind();if(lk){toast(lockText(lk));return}}
  fbSending=true;fbmsg='Invio in corso…';render();
  try{
   const x=await fetch(fbBase()+'/bets/'+S.id+'/'+encodeURIComponent(pidOf(nm))+'.json',{method:'PUT',body:JSON.stringify({n:nm,t:tm,ts:{'.sv':'timestamp'}})});
@@ -332,6 +335,18 @@ async function fbSend(){
  }catch(e){fbmsg='❌ Invio non riuscito. Riprova, oppure usa WhatsApp qui sotto.';dt.cp=true}
  fbSending=false;render();
 }
+
+function lockKind(){if(cdInfo().ph==='closed')return 't';return fbBase()&&S.id&&rsFor===S.id&&rsClosed?'a':''}
+function lockText(k){return k==='t'?'⏰ Tempo scaduto: non puoi più cambiare squadra.':'🔒 Turno chiuso: non puoi più cambiare squadra. Aspetta il prossimo turno.'}
+function toast(t){let e=document.getElementById('toast');if(!e){e=document.createElement('div');e.id='toast';e.setAttribute('role','alert');e.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:88%;background:#7c2d12;color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.3);text-align:center';document.body.appendChild(e)}e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.display='none'},3800)}
+async function fbRS(){
+ if(!(fbBase()&&S.id))return;
+ if(rsFor!==S.id){rsFor=S.id;rsClosed=false}
+ try{const x=await fetch(fbBase()+'/bets/'+S.id+'/__stato.json');if(!x.ok)return;const d=await x.json(),c=!!(d&&d.t==='chiuso');if(c!==rsClosed){rsClosed=c;render()}}catch(e){}
+}
+setInterval(fbRS,8000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)fbRS()});
+setTimeout(fbRS,400);
 </script>
 </body>
 </html>
