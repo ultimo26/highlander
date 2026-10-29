@@ -41,8 +41,9 @@ function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.r
  if(Array.isArray(o))return o.length?o.map(x=>mk(x.n,x.d,x.t)):null;
  if(o&&Array.isArray(o.g)&&o.g.length){const r=o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null,x[3]));r.fb=typeof o.f==='string'&&/^https:\/\//i.test(o.f)?o.f.slice(0,200):'';r.rules=typeof o.r==='string'?o.r.slice(0,1500):'';return r}return null}catch(e){return null}}
 function pj(){const h=location.hash;return h.indexOf('#jg')===0?dec(h.slice(3)):null}
+function mergeJ(keep,j){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;ci=i}else{keep.push(n);ci=keep.length-1}});return ci}
 function codeOf(s){const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null}
-try{const j=pj();if(j){G={games:j,cur:0,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
+try{const j=pj();if(j){let old=null;try{const q=localStorage.getItem('uipj');old=q?JSON.parse(q):null}catch(e){}const keep=(old&&Array.isArray(old.games)?old.games:[]).filter(g=>g&&g.id&&g.cfg);if(keep.length){const ci=mergeJ(keep,j);G={games:keep,cur:ci,rules:j.rules||old.rules||'',fb:j.fb||old.fb||''}}else G={games:j,cur:0,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
 try{draft.name=localStorage.getItem('uipname')||'';draft.gname=localStorage.getItem('uipgn')||''}catch(e){}
 const LS=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
 if(!G||!Array.isArray(G.games)||!G.games.length)G={games:[{players:[],rounds:[]}],cur:0};
@@ -161,7 +162,7 @@ function player(){
    ${u&&u.pend?`<p class="mu">Ultima puntata inviata: <b>${esc(u.pend.t)}</b></p>`:''}
    ${ok&&!closed?`<details class="sub" data-d="cp" ${dt.cp?'open':''}><summary>${online?'Preferisci WhatsApp?':'WhatsApp non si apre?'}</summary>${online?`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">Invia su WhatsApp</a>`:''}<p class="mu">Copia il messaggio e mandalo tu all’organizzatore:</p><textarea readonly id="msgp">${esc(text(draft.name,draft.team))}</textarea><button data-a="cpm">Copia messaggio</button><p class="mu">${esc(cmsg)}</p></details>`:''}</div>`
    +usedBox()
-   +det('cd','➕ Hai un codice invito?',`<p class="mu">Inserisci il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. In alternativa incolla il codice lungo: la partita compare in alto.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button data-a="joinc">Usa codice</button><p class="mu">${esc(jmsg)}</p>`+(G.games.length<2?`<p class="mu">Non hai il codice? Scrivi il nome della partita:</p><input id="gn2" maxlength="30" placeholder="Nome della partita" value="${esc(draft.gname||'')}">`:''))
+   +det('cd',G.games.some(g=>g.id)?'➕ Nuova partita? Inserisci un altro codice':'➕ Hai un codice invito?',`<p class="mu">Inserisci il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. In alternativa incolla il codice lungo: la partita compare in alto.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button data-a="joinc">Usa codice</button><p class="mu">${esc(jmsg)}</p>`+(G.games.length<2?`<p class="mu">Non hai il codice? Scrivi il nome della partita:</p><input id="gn2" maxlength="30" placeholder="Nome della partita" value="${esc(draft.gname||'')}">`:''))
    +rulesBox();
 }
 
@@ -328,7 +329,7 @@ try{const st=localStorage.getItem('uitheme');if(st)document.documentElement.data
 document.getElementById('thm').addEventListener('click',e=>{e.stopPropagation();const d=!isDark();document.documentElement.dataset.theme=d?'dark':'light';try{localStorage.setItem('uitheme',d?'dark':'light')}catch(x){}paintTheme();blip(d)});
 document.getElementById('snd').addEventListener('click',e=>{e.stopPropagation();muted=!muted;try{localStorage.setItem('uimute',muted?'1':'0')}catch(x){}paintTheme();blip(isDark())});
 paintTheme();
-if(pj())gotIn();render();
+if(pj()){save();gotIn()}render();
 alertPh=cdInfo().ph;
 setInterval(()=>{const i=cdInfo();
  if((alertPh==='open'&&i.ph==='last')||(alertPh==='last'&&i.ph==='closed')){blip(true);try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}
