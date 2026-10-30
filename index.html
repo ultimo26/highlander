@@ -162,6 +162,7 @@ function player(){
    ${u&&u.pend?`<p class="mu">Ultima puntata inviata: <b>${esc(u.pend.t)}</b></p>`:''}
    ${ok&&!closed?`<details class="sub" data-d="cp" ${dt.cp?'open':''}><summary>${online?'Preferisci WhatsApp?':'WhatsApp non si apre?'}</summary>${online?`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">Invia su WhatsApp</a>`:''}<p class="mu">Copia il messaggio e mandalo tu all’organizzatore:</p><textarea readonly id="msgp">${esc(text(draft.name,draft.team))}</textarea><button data-a="cpm">Copia messaggio</button><p class="mu">${esc(cmsg)}</p></details>`:''}</div>`
    +usedBox()
+   +gameMgr()
    +det('cd',G.games.some(g=>g.id)?'➕ Nuova partita? Inserisci un altro codice':'➕ Hai un codice invito?',`<p class="mu">Inserisci il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. In alternativa incolla il codice lungo: la partita compare in alto.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button data-a="joinc">Usa codice</button><p class="mu">${esc(jmsg)}</p>`+(G.games.length<2?`<p class="mu">Non hai il codice? Scrivi il nome della partita:</p><input id="gn2" maxlength="30" placeholder="Nome della partita" value="${esc(draft.gname||'')}">`:''))
    +rulesBox();
 }
@@ -244,6 +245,7 @@ document.addEventListener('click',async e=>{
   if(PLAYER_ONLY&&(b.dataset.a==='goadmin'||b.dataset.a==='unlock'||b.dataset.a==='setpw'))return;
   if(b.dataset.a==='sg'){useGame(+b.dataset.i);return}
   if(b.dataset.a==='fbsend'){fbSend();return}
+  if(b.dataset.a==='rmgame'){if(armed!=='rmgame')armed='rmgame';else{armed=null;dropGame(S)}render();return}
   if(b.dataset.a==='pk'){const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
   if(b.dataset.a==='cfu'){const o=uall(),k=ukey(),r=urec();if(r.pend){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}render();return}
   if(b.dataset.a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
@@ -338,6 +340,7 @@ setInterval(()=>{const i=cdInfo();
  const el=document.getElementById('cd');if(el&&i.html&&i.ph===curPh)el.innerHTML=i.html},1000);
 
 async function fbClear(){}
+async function fbDelCode(){}
 async function fbState(){}
 async function fbSend(){
  const nm=cleanN(draft.name),tm=draft.team;if(!nm||!tm||fbSending||!fbBase()||!S.id)return;
@@ -359,6 +362,14 @@ async function fbRS(){
  if(rsFor!==S.id){rsFor=S.id;rsClosed=false}
  try{const x=await fetch(fbBase()+'/bets/'+S.id+'/__stato.json');if(!x.ok)return;const d=await x.json(),c=!!(d&&d.t==='chiuso');if(c!==rsClosed){rsClosed=c;render()}}catch(e){}
 }
+function dropGame(g){if(G.games.length<2)return;const wasCur=S===g;G.games=G.games.filter(x=>x!==g);if(G.liveId&&g.id===G.liveId)G.liveId='';if(wasCur){G.cur=0;S=G.games[0]}else G.cur=Math.max(0,G.games.indexOf(S));norm();draft.team='';armed=null;save()}
+function gameMgr(){
+ if(G.games.length<2)return '';
+ const live=S.id&&S.id===G.liveId;
+ return det('gm','🗑 Togli una partita dall’elenco',live
+  ?`<p class="mu">«${esc(S.name)}» è la partita del link fisso: tornerebbe da sola. Seleziona un’altra partita in alto per poterla togliere.</p>`
+  :`<p class="mu">Toglie «${esc(S.name)}» dall’elenco su questo dispositivo. Le squadre già usate in questa partita vanno perse.</p><button data-a="rmgame" style="color:var(--bad)">${armed==='rmgame'?'Tocca ancora per togliere':'Togli «'+esc(S.name)+'»'}</button>`)
+}
 const HASHLOAD=location.hash.indexOf('#jg')===0;
 async function fbLive(){
  if(HASHLOAD||!G)return;const base=FB_DEFAULT||fbBase();if(!base)return;
@@ -373,7 +384,7 @@ async function fbCfg(){
  const base=FB_DEFAULT||fbBase();if(!base||!G||!G.games)return;let ch=false;
  for(const g of G.games.slice(0,8)){
   if(!g.id||!g.jc)continue;
-  try{const x=await fetch(base+'/codes/'+g.jc+'.json');if(!x.ok)continue;const d=await x.json();if(typeof d!=='string')continue;
+  try{const x=await fetch(base+'/codes/'+g.jc+'.json');if(!x.ok)continue;const d=await x.json();if(d==='DEL'){dropGame(g);ch=true;continue}if(typeof d!=='string')continue;
    const t=codeOf(d),j=t&&dec(t);if(!j)continue;const n=j.find(y=>y.id===g.id);if(!n)continue;
    if(g.name!==n.name){g.name=n.name;ch=true}
    if((g.cfg.deadline||'')!==(n.cfg.deadline||'')){g.cfg.deadline=n.cfg.deadline||'';ch=true}
