@@ -37,11 +37,11 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 let okmsg='',jmsg='',cmsg='',bk='',lv='all',fails=0,lockUntil=+(()=>{try{return localStorage.getItem('uiplk')}catch(e){return 0}})()||0,lastAct=Date.now();const PLAYER_ONLY=true;
 let dt={};let S={players:[],rounds:[]},G=null,joined=PLAYER_ONLY,tab='p',armed=null,unlocked=false,lmsg='',msg='',draft={name:'',team:''};
 function gt(g){return g.cfg&&g.cfg.teams&&g.cfg.teams.length>1?g.cfg.teams:DEF}
-function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.repeat((4-b.length%4)%4);const o=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));const mk=(n,d,t,id)=>({name:String(n||'Partita'),id:id?String(id).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)||undefined:undefined,players:[],rounds:[],cfg:{draw:'out',deadline:d||'',teams:Array.isArray(t)&&t.length>1?t:null,maxRounds:0}});
+function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.repeat((4-b.length%4)%4);const o=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));const mk=(n,d,t,id,jc)=>({name:String(n||'Partita'),jc:/^[A-Z2-9]{6}$/.test(jc||'')?jc:undefined,id:id?String(id).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)||undefined:undefined,players:[],rounds:[],cfg:{draw:'out',deadline:d||'',teams:Array.isArray(t)&&t.length>1?t:null,maxRounds:0}});
  if(Array.isArray(o))return o.length?o.map(x=>mk(x.n,x.d,x.t)):null;
- if(o&&Array.isArray(o.g)&&o.g.length){const r=o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null,x[3]));r.fb=typeof o.f==='string'&&/^https:\/\//i.test(o.f)?o.f.slice(0,200):'';r.rules=typeof o.r==='string'?o.r.slice(0,1500):'';return r}return null}catch(e){return null}}
+ if(o&&Array.isArray(o.g)&&o.g.length){const r=o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null,x[3],x[4]));r.fb=typeof o.f==='string'&&/^https:\/\//i.test(o.f)?o.f.slice(0,200):'';r.rules=typeof o.r==='string'?o.r.slice(0,1500):'';return r}return null}catch(e){return null}}
 function pj(){const h=location.hash;return h.indexOf('#jg')===0?dec(h.slice(3)):null}
-function mergeJ(keep,j){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;ci=i}else{keep.push(n);ci=keep.length-1}});return ci}
+function mergeJ(keep,j){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;if(n.jc)e.jc=n.jc;ci=i}else{keep.push(n);ci=keep.length-1}});return ci}
 function codeOf(s){const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null}
 try{const j=pj();if(j){let old=null;try{const q=localStorage.getItem('uipj');old=q?JSON.parse(q):null}catch(e){}const keep=(old&&Array.isArray(old.games)?old.games:[]).filter(g=>g&&g.id&&g.cfg);if(keep.length){const ci=mergeJ(keep,j);G={games:keep,cur:ci,rules:j.rules||old.rules||'',fb:j.fb||old.fb||''}}else G={games:j,cur:0,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
 try{draft.name=localStorage.getItem('uipname')||'';draft.gname=localStorage.getItem('uipgn')||''}catch(e){}
@@ -66,14 +66,14 @@ const gameBy=n=>G.games.find(x=>x.name.toLowerCase()===String(n).trim().toLowerC
 const findIn=(g,n)=>g.players.find(p=>p.name.toLowerCase()===n.trim().toLowerCase());
 const canonG=(g,t)=>gt(g).find(x=>x.toLowerCase()===t.trim().toLowerCase());
 function pbase(){try{const v=localStorage.getItem('uipbase');if(v)return v}catch(e){}return location.href.split('#')[0]}
-function pcode(only){const T=[],g=(only?[only]:G.games).map(x=>{const t=x.cfg.teams&&x.cfg.teams.length>1?x.cfg.teams:null;let k=0;if(t){const j=JSON.stringify(t);k=T.findIndex(y=>JSON.stringify(y)===j)+1;if(!k){T.push(t);k=T.length}}return [x.name,x.cfg.deadline||'',k,gidOf(x)]});const o={g};if(T.length)o.t=T;if(G.rules)o.r=G.rules;if(fbBase())o.f=fbBase();const by=new TextEncoder().encode(JSON.stringify(o));let b='';by.forEach(c=>b+=String.fromCharCode(c));return 'jg'+btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function pcode(only){const T=[],g=(only?[only]:G.games).map(x=>{const t=x.cfg.teams&&x.cfg.teams.length>1?x.cfg.teams:null;let k=0;if(t){const j=JSON.stringify(t);k=T.findIndex(y=>JSON.stringify(y)===j)+1;if(!k){T.push(t);k=T.length}}return [x.name,x.cfg.deadline||'',k,gidOf(x),jcOf(x)]});const o={g};if(T.length)o.t=T;if(G.rules)o.r=G.rules;if(fbBase())o.f=fbBase();const by=new TextEncoder().encode(JSON.stringify(o));let b='';by.forEach(c=>b+=String.fromCharCode(c));return 'jg'+btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function plink(){return pbase()+'#'+pcode(S)}
 const isLocal=u=>/^(file|content|blob|about|data|filesystem):/i.test(u)||/^(https?:\/\/)?(localhost|127\.|192\.168\.)/i.test(u);
 function pmsg(){return pm0()+(fbBase()?'\n\n🔢 Oppure inserisci nella pagina il codice di «'+S.name+'»: '+jcOf(S):'')}
 function pm0(){return isLocal(pbase())?'⚽ Highlander Friends\nPer puntare: apri il file Highlander Friends, tocca “Hai un codice invito?” e incolla questo codice:\n\n'+pcode(S):'⚽ Highlander Friends\nApri il link e scegli la partita su cui puntare:\n'+plink()+'\n\nSe il link non si apre: apri la pagina, tocca “Hai un codice invito?” e incolla questo codice:\n'+pcode(S)}
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  const keep=(G&&G.games||[]).filter(g=>g.id);
- if(keep.length){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;ci=i}else{keep.push(n);ci=keep.length-1}});G.games=keep;G.cur=ci;G.rules=j.rules||G.rules||'';G.fb=j.fb||G.fb||''}
+ if(keep.length){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;if(n.jc)e.jc=n.jc;ci=i}else{keep.push(n);ci=keep.length-1}});G.games=keep;G.cur=ci;G.rules=j.rules||G.rules||'';G.fb=j.fb||G.fb||''}
  else G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};
  joined=true;S=G.games[G.cur];norm();draft.team='';alertPh=cdInfo().ph;save();return true}
 function useGame(i){if(!G.games[i])return;G.cur=i;S=G.games[i];norm();draft.team='';armed=null;msg='';cmsg='';alertPh=cdInfo().ph;save();render()}
@@ -359,9 +359,33 @@ async function fbRS(){
  if(rsFor!==S.id){rsFor=S.id;rsClosed=false}
  try{const x=await fetch(fbBase()+'/bets/'+S.id+'/__stato.json');if(!x.ok)return;const d=await x.json(),c=!!(d&&d.t==='chiuso');if(c!==rsClosed){rsClosed=c;render()}}catch(e){}
 }
-setInterval(fbRS,8000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)fbRS()});
-setTimeout(fbRS,400);
+const HASHLOAD=location.hash.indexOf('#jg')===0;
+async function fbLive(){
+ if(HASHLOAD||!G)return;const base=FB_DEFAULT||fbBase();if(!base)return;
+ try{
+  const x=await fetch(base+'/codes/LIVE.json');if(!x.ok)return;const d=await x.json();if(typeof d!=='string')return;
+  const t=codeOf(d),j=t&&dec(t),id=j&&j[0]&&j[0].id;if(!id)return;
+  if(G.liveId===id&&G.games.some(g=>g.id===id))return;
+  if(joinCode(d)){G.liveId=id;jmsg='';save();render()}
+ }catch(e){}
+}
+async function fbCfg(){
+ const base=FB_DEFAULT||fbBase();if(!base||!G||!G.games)return;let ch=false;
+ for(const g of G.games.slice(0,8)){
+  if(!g.id||!g.jc)continue;
+  try{const x=await fetch(base+'/codes/'+g.jc+'.json');if(!x.ok)continue;const d=await x.json();if(typeof d!=='string')continue;
+   const t=codeOf(d),j=t&&dec(t);if(!j)continue;const n=j.find(y=>y.id===g.id);if(!n)continue;
+   if(g.name!==n.name){g.name=n.name;ch=true}
+   if((g.cfg.deadline||'')!==(n.cfg.deadline||'')){g.cfg.deadline=n.cfg.deadline||'';ch=true}
+   if(JSON.stringify(g.cfg.teams||null)!==JSON.stringify(n.cfg.teams||null)){g.cfg.teams=n.cfg.teams||null;ch=true}
+   if((G.rules||'')!==(j.rules||'')){G.rules=j.rules||'';ch=true}
+  }catch(e){}
+ }
+ if(ch){save();render()}
+}
+setInterval(()=>{fbRS();fbCfg();fbLive()},8000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){fbRS();fbCfg();fbLive()}});
+setTimeout(()=>{fbLive();fbRS();fbCfg()},300);
 </script>
 </body>
 </html>
