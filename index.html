@@ -151,7 +151,7 @@ function player(){
      :`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">📲 Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p><p class="mu" style="color:#b45309">⚠️ Invio online non attivo: ${!fbBase()?'il codice usato non contiene il collegamento al database':'questa partita non ha un ID'}. Chiedi all’organizzatore di rimandarti il link invito aggiornato e riaprilo (oppure incollane il codice qui sotto in “Hai un codice invito?”).</p>`)
    :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
   return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')
-   +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar():'')
+   +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar()+gameMgr():'')
    +(ended()?podium():'')
    +`<div class="card"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
    <div class="step" style="margin-top:4px">1 · Il tuo nome</div>
@@ -162,7 +162,6 @@ function player(){
    ${u&&u.pend?`<p class="mu">Ultima puntata inviata: <b>${esc(u.pend.t)}</b></p>`:''}
    ${ok&&!closed?`<details class="sub" data-d="cp" ${dt.cp?'open':''}><summary>${online?'Preferisci WhatsApp?':'WhatsApp non si apre?'}</summary>${online?`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">Invia su WhatsApp</a>`:''}<p class="mu">Copia il messaggio e mandalo tu all’organizzatore:</p><textarea readonly id="msgp">${esc(text(draft.name,draft.team))}</textarea><button data-a="cpm">Copia messaggio</button><p class="mu">${esc(cmsg)}</p></details>`:''}</div>`
    +usedBox()
-   +gameMgr()
    +det('cd',G.games.some(g=>g.id)?'➕ Nuova partita? Inserisci un altro codice':'➕ Hai un codice invito?',`<p class="mu">Inserisci il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. In alternativa incolla il codice lungo: la partita compare in alto.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button data-a="joinc">Usa codice</button><p class="mu">${esc(jmsg)}</p>`+(G.games.length<2?`<p class="mu">Non hai il codice? Scrivi il nome della partita:</p><input id="gn2" maxlength="30" placeholder="Nome della partita" value="${esc(draft.gname||'')}">`:''))
    +rulesBox();
 }
@@ -366,9 +365,9 @@ function dropGame(g){if(G.games.length<2)return;const wasCur=S===g;G.games=G.gam
 function gameMgr(){
  if(G.games.length<2)return '';
  const live=S.id&&S.id===G.liveId;
- return det('gm','🗑 Togli una partita dall’elenco',live
-  ?`<p class="mu">«${esc(S.name)}» è la partita del link fisso: tornerebbe da sola. Seleziona un’altra partita in alto per poterla togliere.</p>`
-  :`<p class="mu">Toglie «${esc(S.name)}» dall’elenco su questo dispositivo. Le squadre già usate in questa partita vanno perse.</p><button data-a="rmgame" style="color:var(--bad)">${armed==='rmgame'?'Tocca ancora per togliere':'Togli «'+esc(S.name)+'»'}</button>`)
+ return live
+  ?`<p class="mu" style="margin:6px 2px 0">🔗 «${esc(S.name)}» è la partita del link fisso: non si può togliere.</p>`
+  :`<div style="margin:6px 0 0"><button data-a="rmgame" style="width:auto;padding:7px 14px;font-size:13px;margin:0;color:var(--bad)">${armed==='rmgame'?'Tocca ancora per togliere «'+esc(S.name)+'»':'🗑 Togli «'+esc(S.name)+'» dall’elenco'}</button></div>`
 }
 const HASHLOAD=location.hash.indexOf('#jg')===0;
 async function fbLive(){
