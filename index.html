@@ -33,7 +33,7 @@ textarea{min-height:70px}.bar{height:8px;border-radius:8px;background:var(--bd);
 const DEF=['Atalanta','Bologna','Cagliari','Como','Fiorentina','Frosinone','Genoa','Inter','Juventus','Lazio','Lecce','Milan','Monza','Napoli','Parma','Roma','Sassuolo','Torino','Udinese','Venezia'];
 let SA=DEF.slice();
 let stD=null,stFor='',lastSt='';
-const FBRE=/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)?\.firebasedatabase\.app\/?$/i;
+const FBRE=/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)?\.(firebasedatabase\.app|firebaseio\.com)\/?$/i;
 const TC={Atalanta:'#1c5fa8',Bologna:'#a6192e',Cagliari:'#b3202a',Como:'#0b4ea2',Fiorentina:'#5b2a86',Frosinone:'#f2c200',Genoa:'#b3122b',Inter:'#0a3d91',Juventus:'#222',Lazio:'#7ec8e3',Lecce:'#e2001a',Milan:'#d11a2a',Monza:'#d4202b',Napoli:'#3aa0e0',Parma:'#f6c90e',Roma:'#a8281f',Sassuolo:'#00a651',Torino:'#8b1a1a',Udinese:'#555',Venezia:'#0e6b50'};
 function parseDl(d){if(!d)return NaN;if(/[zZ]|[+-]\d\d:?\d\d$/.test(d))return Date.parse(d);const m=String(d).match(/^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)/);if(!m)return Date.parse(d);const u=Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5]);let t=u;try{for(let i=0;i<2;i++){const q=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'}).formatToParts(new Date(t)).reduce((a,x)=>(a[x.type]=+x.value,a),{});t=u-(Date.UTC(q.year,q.month-1,q.day,q.hour,q.minute)-t)}}catch(e){return Date.parse(d)}return t}
 const $=document.getElementById('app');
