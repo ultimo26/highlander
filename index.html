@@ -25,6 +25,13 @@ a.btn.sel{background:var(--ac);color:#fff;border-color:var(--ac)}
 textarea{min-height:70px}.bar{height:8px;border-radius:8px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}#thm,#snd{width:44px;height:44px;padding:0;margin:0;border-radius:50%;font-size:22px;line-height:1;flex:none}.hd{display:flex;align-items:center;justify-content:space-between;gap:8px}.cd{text-align:center;border-radius:12px;padding:10px;margin:8px 0;border:1px solid var(--bd);background:var(--bg)}.cd b{font-size:26px;display:block;font-variant-numeric:tabular-nums}.cd span{font-size:13px;color:var(--mu)}.cd.last{border-color:var(--bad);color:var(--bad);animation:pl 1.2s infinite}.cd.closed{border-color:var(--bad);color:var(--bad)}@keyframes pl{50%{opacity:.55}}@media(prefers-reduced-motion:reduce){.cd.last{animation:none}}.pod{text-align:center;border:2px solid #d4a017;background:linear-gradient(180deg,rgba(212,160,23,.18),transparent)}.pod .cup{font-size:72px;line-height:1;animation:bn 1.6s ease-in-out infinite}.pod h2{font-size:22px;margin:6px 0 2px}.pod .nm{display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:700;padding:8px;margin:6px 0;border-radius:12px;background:var(--card);border:1px solid var(--bd)}.pod .nm i{font-style:normal;font-size:30px}@keyframes bn{50%{transform:translateY(-6px) rotate(-4deg)}}@media(prefers-reduced-motion:reduce){.pod .cup{animation:none}}summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
 .gb{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.gb button{width:auto;flex:1 1 40%;margin:0}
 </style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1e8e4e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Highlander">
+<script>if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
 </head>
 <body>
 <div class="hd"><h1>⚽ Highlander Friends<small style="display:block;font-size:11px;font-weight:400;opacity:.65">versione con puntate online</small></h1><div style="display:flex;gap:6px"><button id="snd" type="button" aria-label="Audio"></button><button id="thm" type="button" aria-label="Cambia tema"></button></div></div>
