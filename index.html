@@ -54,9 +54,9 @@ function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.r
 function pj(){const h=location.hash;return h.indexOf('#jg')===0?dec(h.slice(3)):null}
 function mergeJ(keep,j){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;ci=i}else{keep.push(n);ci=keep.length-1}});return ci}
 function codeOf(s){const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null}
-try{const j=pj();if(j){let old=null;try{const q=localStorage.getItem('uipj');old=q?JSON.parse(q):null}catch(e){}const keep=(old&&Array.isArray(old.games)?old.games:[]).filter(g=>g&&g.id&&g.cfg);if(keep.length){const ci=mergeJ(keep,j);G={games:keep,cur:ci,rules:j.rules||old.rules||'',fb:j.fb||old.fb||''}}else G={games:j,cur:0,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
+try{const j=pj();if(j){let old=null;try{const q=localStorage.getItem('uipj');old=q?JSON.parse(q):null}catch(e){}const keep=(old&&Array.isArray(old.games)?old.games:[]).filter(g=>g&&g.id&&g.cfg);G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
 try{draft.name=localStorage.getItem('uipname')||'';draft.gname=localStorage.getItem('uipgn')||''}catch(e){}
-let regDraft=draft.name||'',regMsg='',msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='';
+let regSt='',regDraft=draft.name||'',regMsg='',msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='';
 const RK='uipreg';
 const regAll=()=>{try{return JSON.parse(localStorage.getItem(RK))||{}}catch(e){return {}}};
 const regKey=()=>S.id||('n:'+S.name.toLowerCase());
@@ -65,7 +65,7 @@ function regSet(r){const o=regAll();o[regKey()]=r;try{localStorage.setItem(RK,JS
 function syncName(){const r=regRec();draft.name=r?r.n:''}
 const LS=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
 if(!G||!Array.isArray(G.games)||!G.games.length)G={games:[{players:[],rounds:[]}],cur:0};
-G.cur=Math.min(Math.max(0,G.cur|0),G.games.length-1);G.rules=typeof G.rules==='string'?G.rules:'';
+G.cur=Math.min(Math.max(0,G.cur|0),G.games.length-1);G.rules=typeof G.rules==='string'?G.rules:'';if(PLAYER_ONLY&&G.games.length>1){G.games=[G.games[G.cur]];G.cur=0}
 
 const gidOf=g=>g.id||'';
 const fbBase=()=>String(G.fb||'').trim().replace(/\/+$/,'');
@@ -90,9 +90,7 @@ const isLocal=u=>/^(file|content|blob|about|data|filesystem):/i.test(u)||/^(http
 function pmsg(){return pm0()+(fbBase()?'\n\n🔢 Oppure inserisci nella pagina il codice di «'+S.name+'»: '+jcOf(S):'')}
 function pm0(){return isLocal(pbase())?'⚽ Highlander Friends\nPer puntare: apri il file Highlander Friends, tocca “Hai un codice invito?” e incolla questo codice:\n\n'+pcode(S):'⚽ Highlander Friends\nApri il link e scegli la partita su cui puntare:\n'+plink()+'\n\nSe il link non si apre: apri la pagina, tocca “Hai un codice invito?” e incolla questo codice:\n'+pcode(S)}
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
- const keep=(G&&G.games||[]).filter(g=>g.id);
- if(keep.length){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.id===n.id):-1;if(i>=0){const e=keep[i];e.name=n.name;e.cfg.deadline=n.cfg.deadline;e.cfg.teams=n.cfg.teams;ci=i}else{keep.push(n);ci=keep.length-1}});G.games=keep;G.cur=ci;G.rules=j.rules||G.rules||'';G.fb=j.fb||G.fb||''}
- else G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};
+ G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};
  joined=true;S=G.games[G.cur];norm();draft.team='';alertPh=cdInfo().ph;save();return true}
 function useGame(i){if(!G.games[i])return;G.cur=i;S=G.games[i];norm();draft.team='';armed=null;msg='';cmsg='';alertPh=cdInfo().ph;save();render()}
 function gbar(){if(G.games.length<2)return '';return `<div class="gb">${G.games.map((g,i)=>{const r=g.rounds.find(x=>x.status==='open'),al=g.players.filter(p=>!p.out),d=parseDl(g.cfg.deadline),left=d-Date.now();
@@ -156,7 +154,7 @@ function urec(){const o=uall(),k=ukey();const r=o[k]||{used:[],pend:null};
  return r}
 const usedTeams=()=>draft.name.trim()?urec().used:[];
 function recordSend(){if(!draft.name.trim()||!draft.team)return;const o=uall(),k=ukey(),r=urec();r.pend={t:draft.team,dl:S.cfg.deadline||'',ts:Date.now()};o[k]=r;usave(o);setTimeout(render,150)}
-function gotIn(){okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';setTimeout(()=>{okmsg='';render()},8000)}
+function gotIn(){regSt='';setTimeout(fbNm,500);okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';setTimeout(()=>{okmsg='';render()},8000)}
 const usedList=(us,u)=>`<div style="margin:12px 0 0;font-size:14px"><b>🗂 Squadre già usate (${us.length})</b><div class="mu" style="margin-top:2px">${us.length?us.map((t,i)=>(i+1)+'. '+esc(t)).join('<br>'):'Nessuna per ora.'}</div>${u&&u.pend?'<div class="mu" style="margin-top:4px">⏳ In corso: <b>'+esc(u.pend.t)+'</b> (diventa usata a turno chiuso)</div>':''}</div>`;
 const msgBox=()=>{const r=regRec();if(!r)return '';const on=!!(fbBase()&&S.id);
  const th=msgs.length&&msgFor===S.id?msgs.map(m=>`<div class="mg ${m.f==='a'?'a':''}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><div>${esc(m.t)}</div></div>`).join(''):'<p class="mu">Nessun messaggio.</p>';
@@ -176,7 +174,7 @@ function player(){
    +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar():'')
    +(ended()?podium():'')
    +(!regRec()?`<div class="card"><h2>👤 Registrati${multi?' — '+esc(S.name):''}</h2><p class="mu">Scrivi il tuo nome: lo userai per tutta la partita e non potrai cambiarlo. Solo l’admin può modificarlo.</p><input id="rn" maxlength="30" placeholder="Il tuo nome" value="${esc(regDraft)}"><button class="sel" data-a="reg">Registra il mio nome</button><p class="mu">${esc(regMsg)}</p></div>`:`<div class="card"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
-   <div class="step" style="margin-top:4px">👤 ${esc(draft.name)}</div><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>
+   <div class="step" style="margin-top:4px">👤 ${esc(draft.name)}</div><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>${regSt==='ok'?'<p class="mu" style="margin:2px 0 0">✅ Il tuo nome è arrivato all’admin.</p>':regSt==='no'||regSt==='err'?'<p class="mu" style="margin:2px 0 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
    <div class="step">1 · Scegli la squadra</div>
    <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
    ${usedList(us,u)}
@@ -266,7 +264,8 @@ document.addEventListener('click',async e=>{
   if(b.dataset.a==='sg'){useGame(+b.dataset.i);return}
   if(b.dataset.a==='fbsend'){fbSend();return}
   if(b.dataset.a==='msend'){fbMsgSend();return}
-  if(b.dataset.a==='reg'){const el=document.getElementById('rn'),n=cleanN(el&&el.value);regDraft=n;if(n.length<2){regMsg='Scrivi il tuo nome (almeno 2 lettere).';render();return}regMsg='Registrazione in corso…';render();const c=await fbReg(n);if(c){regMsg=['','❌ Nome già usato da un altro giocatore: aggiungi cognome o iniziale.','❌ Il database ha rifiutato la registrazione: avvisa l’admin.','❌ Nessuna connessione: riprova.','Prima inserisci il codice partita dell’admin (in fondo alla pagina): il nome deve arrivare a lui.'][c];if(c===4)dt.cd=true;render();return}regSet({n,rid:pidOf(n),sent:true});try{localStorage.setItem('uipname',n)}catch(x){}regMsg='';okmsg='✅ Registrato come '+n;setTimeout(()=>{okmsg='';render()},6000);fbMsgs();render();return}
+  if(b.dataset.a==='rsnd'){const r=regRec();if(r){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r);regSt='ok'}else{regSt='err';toast(['','Nome già usato da un altro dispositivo','Il database rifiuta la registrazione: avvisa l’admin','Nessuna connessione','Prima inserisci il codice partita'][c])}}render();return}
+  if(b.dataset.a==='reg'){const el=document.getElementById('rn'),n=cleanN(el&&el.value);regDraft=n;if(n.length<2){regMsg='Scrivi il tuo nome (almeno 2 lettere).';render();return}regMsg='Registrazione in corso…';render();const c=await fbReg(n);if(c){regMsg=['','❌ Nome già usato da un altro giocatore: aggiungi cognome o iniziale.','❌ Il database ha rifiutato la registrazione: avvisa l’admin.','❌ Nessuna connessione: riprova.','Prima inserisci il codice partita dell’admin (in fondo alla pagina): il nome deve arrivare a lui.'][c];if(c===4)dt.cd=true;render();return}regSet({n,rid:pidOf(n),sent:true});regSt='ok';try{localStorage.setItem('uipname',n)}catch(x){}regMsg='';okmsg='✅ Registrato come '+n;setTimeout(()=>{okmsg='';render()},6000);fbMsgs();render();return}
   if(b.dataset.a==='pk'){const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
   if(b.dataset.a==='cfu'){const o=uall(),k=ukey(),r=urec();if(r.pend){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}render();return}
   if(b.dataset.a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
@@ -388,7 +387,8 @@ setTimeout(fbRS,400);
 async function fbReg(n){if(!(fbBase()&&S.id))return 4;const u=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(pidOf(n))+'.json';
  try{const x=await fetch(u);if(x.ok){const d=await x.json();if(d&&d.k&&d.k!==pkey(n))return 1}
   const y=await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:pkey(n),ts:{'.sv':'timestamp'}})});return y.ok?0:2}catch(e){return 3}}
-async function fbNm(){const r=regRec();if(!r||!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),n=d&&cleanN(d.n);if(d===null&&!r.sent){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r)}return}
+function setRs(v){if(regSt!==v){regSt=v;render()}}
+async function fbNm(){const r=regRec();if(!r||!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}const d=await x.json(),n=d&&cleanN(d.n);if(d===null){if(!r.sent){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r);setRs('ok');return}}setRs('no');return}setRs('ok');
  if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}r.n=n;regSet(r);render()}}catch(e){}}
 async function fbMsgs(){const r=regRec();if(!(r&&fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>d[k]).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==S.id||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=S.id;render()}}catch(e){}}
 async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0,300);if(!r||!t||msgBusy||!(fbBase()&&S.id))return;msgBusy=true;msgNote='';render();
