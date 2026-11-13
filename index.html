@@ -266,7 +266,7 @@ document.addEventListener('click',async e=>{
   if(b.dataset.a==='sg'){useGame(+b.dataset.i);return}
   if(b.dataset.a==='fbsend'){fbSend();return}
   if(b.dataset.a==='msend'){fbMsgSend();return}
-  if(b.dataset.a==='reg'){const el=document.getElementById('rn'),n=cleanN(el&&el.value);regDraft=n;if(n.length<2){regMsg='Scrivi il tuo nome (almeno 2 lettere).';render();return}regMsg='Registrazione in corso…';render();const ok=await fbReg(n);if(!ok){regMsg='❌ Nome già usato da un altro giocatore: aggiungi cognome o iniziale.';render();return}regSet({n,rid:pidOf(n)});try{localStorage.setItem('uipname',n)}catch(x){}regMsg='';okmsg='✅ Registrato come '+n;setTimeout(()=>{okmsg='';render()},6000);fbMsgs();render();return}
+  if(b.dataset.a==='reg'){const el=document.getElementById('rn'),n=cleanN(el&&el.value);regDraft=n;if(n.length<2){regMsg='Scrivi il tuo nome (almeno 2 lettere).';render();return}regMsg='Registrazione in corso…';render();const c=await fbReg(n);if(c){regMsg=['','❌ Nome già usato da un altro giocatore: aggiungi cognome o iniziale.','❌ Il database ha rifiutato la registrazione: avvisa l’admin.','❌ Nessuna connessione: riprova.','Prima inserisci il codice partita dell’admin (in fondo alla pagina): il nome deve arrivare a lui.'][c];if(c===4)dt.cd=true;render();return}regSet({n,rid:pidOf(n),sent:true});try{localStorage.setItem('uipname',n)}catch(x){}regMsg='';okmsg='✅ Registrato come '+n;setTimeout(()=>{okmsg='';render()},6000);fbMsgs();render();return}
   if(b.dataset.a==='pk'){const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
   if(b.dataset.a==='cfu'){const o=uall(),k=ukey(),r=urec();if(r.pend){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}render();return}
   if(b.dataset.a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
@@ -385,10 +385,10 @@ async function fbRS(){
 setInterval(fbRS,8000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)fbRS()});
 setTimeout(fbRS,400);
-async function fbReg(n){if(!(fbBase()&&S.id))return true;const u=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(pidOf(n))+'.json';
- try{const x=await fetch(u);if(x.ok){const d=await x.json();if(d&&d.k&&d.k!==pkey(n))return false}
-  await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:pkey(n),ts:{'.sv':'timestamp'}})})}catch(e){}return true}
-async function fbNm(){const r=regRec();if(!r||!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),n=d&&cleanN(d.n);
+async function fbReg(n){if(!(fbBase()&&S.id))return 4;const u=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(pidOf(n))+'.json';
+ try{const x=await fetch(u);if(x.ok){const d=await x.json();if(d&&d.k&&d.k!==pkey(n))return 1}
+  const y=await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:pkey(n),ts:{'.sv':'timestamp'}})});return y.ok?0:2}catch(e){return 3}}
+async function fbNm(){const r=regRec();if(!r||!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),n=d&&cleanN(d.n);if(d===null&&!r.sent){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r)}return}
  if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}r.n=n;regSet(r);render()}}catch(e){}}
 async function fbMsgs(){const r=regRec();if(!(r&&fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>d[k]).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==S.id||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=S.id;render()}}catch(e){}}
 async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0,300);if(!r||!t||msgBusy||!(fbBase()&&S.id))return;msgBusy=true;msgNote='';render();
