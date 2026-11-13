@@ -158,6 +158,9 @@ const usedTeams=()=>draft.name.trim()?urec().used:[];
 function recordSend(){if(!draft.name.trim()||!draft.team)return;const o=uall(),k=ukey(),r=urec();r.pend={t:draft.team,dl:S.cfg.deadline||'',ts:Date.now()};o[k]=r;usave(o);setTimeout(render,150)}
 function gotIn(){bc=[];setTimeout(fbBc,500);regSt='';setTimeout(fbNm,500);okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';setTimeout(()=>{okmsg='';render()},8000)}
 const usedList=(us,u)=>`<div style="margin:12px 0 0;font-size:14px"><b>🗂 Squadre già usate (${us.length})</b><div class="mu" style="margin-top:2px">${us.length?us.map((t,i)=>(i+1)+'. '+esc(t)).join('<br>'):'Nessuna per ora.'}</div>${u&&u.pend?'<div class="mu" style="margin-top:4px">⏳ In corso: <b>'+esc(u.pend.t)+'</b> (diventa usata a turno chiuso)</div>':''}</div>`;
+const isOut=()=>{const n=draft.name.trim().toLowerCase();return !!n&&!!stD&&stFor===S.id&&Array.isArray(stD.out)&&stD.out.some(x=>String(x).trim().toLowerCase()===n)};
+const outWhy=()=>{const n=draft.name.trim().toLowerCase();if(!stD||!Array.isArray(stD.out))return '';const i=stD.out.findIndex(x=>String(x).trim().toLowerCase()===n);return i>=0&&stD.why&&stD.why[i]?String(stD.why[i]):''};
+const elimBox=()=>isOut()?`<div class="card" style="border:2px solid var(--bad);text-align:center"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'';
 const bcBox=()=>{const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card" style="border-color:var(--ac)"><h2>📣 Avvisi dell’admin</h2>${v.map(m=>`<div class="mg a"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''};
 async function fbBc(){if(!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/__tutti.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-3):[];if(JSON.stringify(a)!==JSON.stringify(bc)){bc=a;render()}}catch(e){}}
 setInterval(fbBc,30000);setTimeout(fbBc,800);
@@ -168,20 +171,20 @@ function usedBox(){if(!draft.name.trim())return '';const u=urec();if(!u.used.len
  return det('us','🗂 Le mie squadre già usate ('+u.used.length+')',(u.pend?`<p class="mu">Ultima puntata: <b>${esc(u.pend.t)}</b>. Finché il turno è aperto puoi ancora cambiarla.</p><button data-a="cfu">Turno finito: segna ${esc(u.pend.t)} come usata</button>`:'')+(u.used.map((t,i)=>`<div class="row"><span>${esc(t)}</span><button class="inl" data-a="rmu" data-i="${i}" aria-label="Rimuovi ${esc(t)}">✕</button></div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+'<p class="mu">Se hai segnato una squadra per errore, tocca ✕.</p>')}
 function player(){
   if(dt.cd===undefined&&!G.games.some(g=>g.id))dt.cd=true;
-  const us=usedTeams();if(us.includes(draft.team))draft.team='';
+  const us=usedTeams(),elim=isOut();if(us.includes(draft.team)||elim)draft.team='';
   const nm=draft.name.trim(),ok=!!(nm&&draft.team),lk=lockKind(),closed=!!lk,u=nm?urec():null,multi=G.games.length>1;
   const online=!!(fbBase()&&S.id),waHref='https://wa.me/?text='+encodeURIComponent(text(draft.name,draft.team));
-  const send=ok&&!closed
+  const send=ok&&!closed&&!elim
    ?(online?`<button class="sel" data-a="fbsend" ${fbSending?'disabled':''}>📲 Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
      :`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">📲 Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p><p class="mu" style="color:#b45309">⚠️ Invio online non attivo: ${!fbBase()?'il codice usato non contiene il collegamento al database':'questa partita non ha un ID'}. Chiedi all’organizzatore di rimandarti il link invito aggiornato e riaprilo (oppure incollane il codice qui sotto in “Hai un codice invito?”).</p>`)
-   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
+   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
   return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')
    +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar():'')
-   +(ended()?podium():'')+bcBox()
+   +elimBox()+(ended()?podium():'')+bcBox()
    +(!regRec()?`<div class="card"><h2>👤 Registrati${multi?' — '+esc(S.name):''}</h2><p class="mu">Scrivi il tuo nome: lo userai per tutta la partita e non potrai cambiarlo. Solo l’admin può modificarlo.</p><input id="rn" maxlength="30" placeholder="Il tuo nome" value="${esc(regDraft)}"><button class="sel" data-a="reg">Registra il mio nome</button><p class="mu">${esc(regMsg)}</p></div>`:`<div class="card"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
    <div class="step" style="margin-top:4px">👤 ${esc(draft.name)}</div><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>${regSt==='ok'?'<p class="mu" style="margin:2px 0 0">✅ Il tuo nome è arrivato all’admin.</p>':regSt==='no'||regSt==='err'?'<p class="mu" style="margin:2px 0 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
    <div class="step">1 · Scegli la squadra</div>
-   <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
+   <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x||elim?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
    ${usedList(us,u)}
    <div class="sendbar"><div class="step" style="margin:0 0 4px">2 · Invia</div>${send}</div>
    ${u&&u.pend?`<div class="cd" style="border-color:var(--ac);color:var(--tx)">✅ Puntata inviata<b>${esc(u.pend.t)}</b><span>Finché il turno è aperto puoi cambiarla</span>${online||dlMs()!==null?'':`<button data-a="cfu" style="margin-top:8px">Turno finito: segna ${esc(u.pend.t)} come usata</button>`}</div>`:''}
@@ -404,7 +407,7 @@ setInterval(fbNm,60000);setTimeout(fbNm,700);setInterval(fbMsgs,20000);setTimeou
 function pkey(nm){const k='uipk';let o={};try{o=JSON.parse(localStorage.getItem(k))||{}}catch(e){}const id=S.id+'|'+pidOf(nm);if(!o[id]){const a=new Uint8Array(16);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<16;i++)a[i]=Math.random()*256}o[id]=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');try{localStorage.setItem(k,JSON.stringify(o))}catch(e){}}return o[id]}
 function stBox(){if(!stD||stFor!==S.id||!Array.isArray(stD.alive))return '';return det('st','👥 In gara ('+stD.alive.length+')',stD.alive.map(n=>`<div class="row"><span>${esc(n)}</span></div>`).join('')+(Array.isArray(stD.out)&&stD.out.length?'<p class="mu">Eliminati: '+stD.out.map(esc).join(', ')+'</p>':'')+(stD.round?'<p class="mu">'+esc(stD.round)+'</p>':''))}
 async function fbSt(){if(!(fbBase()&&S.id))return;const id=S.id;try{const x=await fetch(fbBase()+'/status/'+id+'.json');if(!x.ok)return;const d=await x.json();if(stFor!==id||JSON.stringify(d)!==JSON.stringify(stD)){stD=d;stFor=id;render()}}catch(e){}}
-setInterval(fbSt,60000);setTimeout(fbSt,600);
+setInterval(fbSt,20000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)fbSt()});setTimeout(fbSt,600);
 </script>
 </body>
 </html>
