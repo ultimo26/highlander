@@ -77,6 +77,16 @@ const FB_DEFAULT='https://highlander-2026-default-rtdb.europe-west1.firebasedata
 const JCA='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 function shortCode(v){const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,'');return /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/.test(m)?m:''}
 function jcOf(g){g=g||S;if(!/^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/.test(g.jc||'')){let c;do{const a=new Uint8Array(6);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<6;i++)a[i]=Math.random()*256}c=[...a].map(x=>JCA[x%JCA.length]).join('')}while(G.games.some(x=>x.jc===c));g.jc=c;try{save()}catch(e){}}return g.jc}
+/* Snapshot leggero: niente copia dei giocatori; l'annullamento usa r.res e r.bets. Vecchi backup (snap = stringa JSON) ancora supportati */
+function undoRound(S,l){if(typeof l.snap==='string'){S.players=JSON.parse(l.snap);return}
+ Object.keys(l.res||{}).forEach(n=>{const p=S.players.find(x=>x.name===n);if(!p)return;if(l.res[n]){const t=(l.bets||{})[n];if(p.used.length&&p.used[p.used.length-1]===t)p.used.pop()}else p.out=null})}
+function pruneSnaps(S,keep){S.rounds.forEach(x=>{if(x!==keep)delete x.snap})}
+/* Feedback sulle righe di import non riconosciute */
+function badLine(l,i){const t=l.trim();if(!/puntata/i.test(t))return null;const q=' «'+(t.length>60?t.slice(0,57)+'…':t)+'»';
+ if(!/Puntata (?:Highlander Friends|Ultimo in Piedi)/i.test(t))return 'Riga '+(i+1)+' ❌ Intestazione non riconosciuta (deve iniziare con “Puntata Highlander Friends”):'+q;
+ if(!/:/.test(t))return 'Riga '+(i+1)+' ❌ Manca il “:” dopo l’intestazione:'+q;
+ if(!/(?:->|→)/.test(t))return 'Riga '+(i+1)+' ❌ Manca la freccia “->” tra nome e squadra:'+q;
+ return 'Riga '+(i+1)+' ❌ Nome o squadra mancante:'+q}
 function norm(g){g=g||S;g.name=g.name||'Partita 1';g.players=g.players||[];g.rounds=g.rounds||[];g.cfg=Object.assign({draw:'out',deadline:'',teams:null,maxRounds:0},g.cfg||{});if(g===S)SA=gt(S).slice()}
 G.games.forEach(g=>norm(g));S=G.games[G.cur];norm();
 const save=()=>{try{localStorage.setItem(joined?'uipj':'uipg',JSON.stringify(G))}catch(e){}};
@@ -207,7 +217,7 @@ function admin(){
     const got=alive().filter(p=>r.bets[p.name]).length;
     h+=`<div class="card"><h2>1 · Puntate — ${esc(r.label)}${maxR()?' di '+maxR():''}</h2>
      <div class="bar"><i style="width:${n?got/n*100:0}%"></i></div><p class="mu" style="margin:4px 0 10px">Ricevute ${got} su ${n}</p>
-     <textarea id="paste" placeholder="Incolla qui i messaggi di WhatsApp"></textarea><button class="sel" data-a="imp">Importa puntate</button>
+     <textarea id="paste" placeholder="Incolla qui i messaggi di WhatsApp"></textarea><button class="sel" data-a="imp">Importa puntate</button><p class="mu" style="font-size:12px">Formato: <b>Puntata Highlander Friends: Nome -&gt; Squadra</b> (una per riga; con più partite: <b>[Partita]</b> dopo “Friends”). Le righe non valide vengono segnalate sotto.</p>
      <p class="mu">${Array.isArray(msg)?msg.map(esc).join('<br>'):esc(msg)}</p>${fbBase()?'<p class="mu">🔄 Puntate online attive: arrivano da sole qui sotto.'+(fbLog.length?'<br>'+fbLog.slice(0,6).map(esc).join('<br>'):'')+'</p>':''}`+
      alive().map(p=>`<div class="row"><span>${r.bets[p.name]?'✅':'⏳'} ${esc(p.name)}</span><select data-bet="${esc(p.name)}"><option value="">— scegli —</option>${SA.filter(t=>!p.used.includes(t)).map(t=>`<option ${r.bets[p.name]===t?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`).join('')+
      `<p class="mu">Puoi correggere a mano la squadra di ognuno dal menu.</p></div>`;
@@ -306,7 +316,7 @@ document.addEventListener('click',async e=>{
   else if(b.dataset.a==='svr'){const v=document.getElementById('rgt').value.trim().slice(0,1500);G.rules=v===DEFRULES?'':v;save();cmsg='Regolamento salvato'}
   else if(b.dataset.a==='dfr'){G.rules='';save();cmsg='Testo base ripristinato'}
   else if(b.dataset.a==='deft'){S.cfg.teams=null;norm();save();cmsg='Elenco ripristinato'}
-  else if(b.dataset.a==='undo'){const l=S.rounds[S.rounds.length-1];if(!l||l.status!=='done'||!l.snap){}else if(armed!=='undo')armed='undo';else{S.players=JSON.parse(l.snap);l.status='open';delete l.snap;delete l.res;armed=null;save()}}
+  else if(b.dataset.a==='undo'){const l=S.rounds[S.rounds.length-1];if(!l||l.status!=='done'||!l.snap){}else if(armed!=='undo')armed='undo';else{undoRound(S,l);l.status='open';delete l.snap;delete l.res;armed=null;save()}}
   else if(b.dataset.a==='cpbk'){try{await navigator.clipboard.writeText(JSON.stringify(G));cmsg='Backup copiato ✅'}catch(e){const t=document.getElementById('st2');t.focus();t.select();cmsg='Seleziona il testo e copialo a mano'}}
   else if(b.dataset.a==='rsbk'){if(armed!=='rsbk'){bk=document.getElementById('bki').value;armed='rsbk'}else{try{const o=JSON.parse(bk);if(Array.isArray(o.games)&&o.games.length)G={games:o.games,cur:0,fb:typeof o.fb==='string'?o.fb:'',jc:typeof o.jc==='string'?o.jc:undefined};else if(Array.isArray(o.players)&&Array.isArray(o.rounds)){o.name=S.name;G.games[G.cur]=o}else throw 0;G.games.forEach(g=>norm(g));G.rules=typeof G.rules==='string'?G.rules:'';G.cur=Math.min(G.cur,G.games.length-1);S=G.games[G.cur];norm();save();bk='';cmsg='Backup ripristinato ✅'}catch(e){cmsg='Backup non valido'}armed=null}}
   else if(b.dataset.a==='addp'){document.getElementById('pls').value.split(',').map(x=>x.trim()).filter(x=>x&&!find(x)).forEach(n=>S.players.push({name:n,out:null,used:[]}));save()}
@@ -314,8 +324,8 @@ document.addEventListener('click',async e=>{
   else if(b.dataset.a==='newr'){if(ended())return render();S.rounds.push({label:'Turno '+(S.rounds.length+1),status:'open',bets:{},winners:[]});save()}
   else if(b.dataset.a==='imp'){
     const rep=[];
-    document.getElementById('paste').value.split('\n').forEach(l=>{
-      const m=l.match(/Puntata (?:Highlander Friends|Ultimo in Piedi)(?:\s*\[(.+?)\])?:\s*(.+?)\s*(?:->|→)\s*(.+?)\s*$/i);if(!m)return;
+    document.getElementById('paste').value.split('\n').forEach((l,li)=>{
+      const m=l.match(/Puntata (?:Highlander Friends|Ultimo in Piedi)(?:\s*\[(.+?)\])?:\s*(.+?)\s*(?:->|→)\s*(.+?)\s*$/i);if(!m){const bd=badLine(l,li);if(bd)rep.push(bd);return}
       const g=m[1]?gameBy(m[1]):S,nm=m[2].trim(),tm=m[3].trim();
       if(!g){rep.push(nm+' → '+tm+' ❌ Partita sconosciuta: '+m[1].trim()+' (esistenti: '+G.games.map(x=>x.name).join(', ')+')');return}
       const tag=g!==S?' ['+g.name+']':(!m[1]&&G.games.length>1?' [in '+g.name+']':'');
@@ -335,7 +345,7 @@ document.addEventListener('click',async e=>{
   else if(b.dataset.a==='cplk'){try{await navigator.clipboard.writeText(pmsg());cmsg='Messaggio copiato ✅'}catch(e){const t=document.getElementById('plk');t.focus();t.select();cmsg='Seleziona il testo e copialo a mano'}}
   else if(b.dataset.a==='done'){
     if(armed!=='done'){armed='done'}else{
-      r.snap=JSON.stringify(S.players);r.res={};alive().forEach(p=>{const t=r.bets[p.name];r.res[p.name]=passes(r,t);if(passes(r,t))p.used.push(t);else p.out=r.label+(t?' ('+t+')':' (nessuna puntata)')});
+      pruneSnaps(S,r);r.snap=1;r.res={};alive().forEach(p=>{const t=r.bets[p.name];r.res[p.name]=passes(r,t);if(passes(r,t))p.used.push(t);else p.out=r.label+(t?' ('+t+')':' (nessuna puntata)')});
       r.status='done';armed=null;msg='';save();fbClear(S)}}
   else if(b.dataset.a==='newgame'){if(armed!=='newgame'){armed='newgame'}else{S.players.forEach(p=>{p.out=null;p.used=[]});S.rounds=[];armed=null;msg='';save();fbClear(S)}}
   else if(b.dataset.a==='reset'){if(armed!=='reset'){armed='reset'}else{G.games[G.cur]=S={name:S.name,id:S.id,jc:S.jc,players:[],rounds:[],cfg:S.cfg};fbClear(S);armed=null;save()}}
