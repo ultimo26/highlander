@@ -56,14 +56,17 @@ function mergeJ(keep,j){let ci=0;j.forEach(n=>{const i=n.id?keep.findIndex(g=>g.
 function codeOf(s){const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null}
 try{const j=pj();if(j){let old=null;try{const q=localStorage.getItem('uipj');old=q?JSON.parse(q):null}catch(e){}const keep=(old&&Array.isArray(old.games)?old.games:[]).filter(g=>g&&g.id&&g.cfg);G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};joined=true}else{const x=localStorage.getItem('uipg'),o=localStorage.getItem('uip'),q=localStorage.getItem('uipj');if(x&&!PLAYER_ONLY)G=JSON.parse(x);else if(o&&!PLAYER_ONLY)G={games:[JSON.parse(o)],cur:0};else if(q){G=JSON.parse(q);joined=true}}}catch(e){}
 try{draft.name=localStorage.getItem('uipname')||'';draft.gname=localStorage.getItem('uipgn')||''}catch(e){}
-let regMode='new',regPin='',regSt='',regDraft=draft.name||'',regMsg='',bc=[],msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='';
+let regMode='new',regPin='',regSt='',regDraft=draft.name||'',regMsg='',bc=[],msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='',binding=false,bindMsg='',bindCode=null;
 const hidAll=()=>{try{return JSON.parse(localStorage.getItem('uiphid'))||{}}catch(e){return {}}};
 function hidAdd(ids){const o=hidAll();ids.forEach(i=>{if(i)o[S.id+'|'+i]=1});const k=Object.keys(o).slice(-300),p={};k.forEach(x=>p[x]=1);try{localStorage.setItem('uiphid',JSON.stringify(p))}catch(e){}}
-const RK='uipreg';
-const regAll=()=>{try{return JSON.parse(localStorage.getItem(RK))||{}}catch(e){return {}}};
-const regKey=()=>S.id||('n:'+S.name.toLowerCase());
-const regRec=()=>regAll()[regKey()]||null;
-function regSet(r){const o=regAll();o[regKey()]=r;try{localStorage.setItem(RK,JSON.stringify(o))}catch(e){}}
+const IDK='uipid';let idMem=null;
+function idGet(){try{const r=JSON.parse(localStorage.getItem(IDK));if(r&&r.n&&r.rid)return r}catch(e){}return idMem&&idMem.n?idMem:null}
+function idPut(r){idMem=r;try{localStorage.setItem(IDK,JSON.stringify(r))}catch(e){}}
+function idMark(f){const r=idGet();if(!r)return;f(r);idPut(r)}
+/* migrazione: chi era già registrato con la vecchia versione non deve rifare nulla */
+(function(){if(idGet())return;try{const o=JSON.parse(localStorage.getItem('uipreg'))||{},k=Object.keys(o).find(x=>o[x]&&o[x].n&&o[x].rid);if(!k)return;const s={};Object.keys(o).forEach(x=>{if(o[x]&&o[x].rid===o[k].rid&&o[x].sent)s[x]=1});idPut({n:o[k].n,rid:o[k].rid,s,gn:{}})}catch(e){}})();
+const regRec=()=>{const r=idGet();if(!r)return null;const g=S.id&&r.gn&&r.gn[S.id];return Object.assign({},r,{n:g||r.n})};
+const isBound=()=>{const r=idGet();return !!(r&&S.id&&r.s&&r.s[S.id])};
 function syncName(){const r=regRec();draft.name=r?r.n:''}
 const LS=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
 if(!G||!Array.isArray(G.games)||!G.games.length)G={games:[{players:[],rounds:[]}],cur:0};
@@ -104,7 +107,7 @@ function pm0(){return isLocal(pbase())?'⚽ Highlander Friends\nPer puntare: apr
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  G={games:j,cur:j.length-1,rules:j.rules||'',fb:j.fb||''};
  joined=true;S=G.games[G.cur];norm();draft.team='';alertPh=cdInfo().ph;save();return true}
-function useGame(i){if(!G.games[i])return;G.cur=i;S=G.games[i];norm();draft.team='';armed=null;msg='';cmsg='';alertPh=cdInfo().ph;save();render()}
+function useGame(i){if(!G.games[i])return;G.cur=i;S=G.games[i];norm();draft.team='';armed=null;msg='';cmsg='';bindMsg='';bindCode=null;alertPh=cdInfo().ph;save();render();setTimeout(fbNm,300)}
 function gbar(){if(G.games.length<2)return '';return `<div class="gb">${G.games.map((g,i)=>{const r=g.rounds.find(x=>x.status==='open'),al=g.players.filter(p=>!p.out),d=parseDl(g.cfg.deadline),left=d-Date.now();
  const inf=g.players.length?' · '+(tab==='a'&&r?al.filter(p=>r.bets[p.name]).length+'/'+al.length+' puntate':al.length+'/'+g.players.length):'',mk=isNaN(d)?'':left<=0?' 🔒':left<=3600000?' ⚠️':'';
  return `<button data-a="sg" data-i="${i}" aria-pressed="${i===G.cur}" class="${i===G.cur?'sel':''}">${esc(g.name)}${inf}${mk}</button>`}).join('')}</div>`}
@@ -174,16 +177,18 @@ const elimBox=()=>isOut()?`<div class="card" style="border:2px solid var(--bad);
 const bcBox=()=>{const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card" style="border-color:var(--ac)"><h2>📣 Avvisi dell’admin</h2>${v.map(m=>`<div class="mg a"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''};
 async function fbBc(){if(!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/__tutti.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-3):[];if(JSON.stringify(a)!==JSON.stringify(bc)){bc=a;render()}}catch(e){}}
 setInterval(fbBc,30000);setTimeout(fbBc,800);
-const msgBox=()=>{const r=regRec();if(!r)return '';const on=!!(fbBase()&&S.id),vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
+const msgBox=()=>{const r=regRec();if(!r||!isBound())return '';const on=!!(fbBase()&&S.id),vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
  const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'a':''}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')+(vis.length?'<button data-a="hma">🗑 Cancella tutti i messaggi</button>':''):'<p class="mu">Nessun messaggio.</p>';
  return `<div class="card"><h2>💬 Messaggi con l’admin</h2>${on?th:''}<textarea id="mt" maxlength="300" placeholder="Scrivi un messaggio all’admin">${esc(msgText)}</textarea>`+(on?`<button class="sel" data-a="msend" ${msgBusy?'disabled':''}>Invia messaggio</button>`:`<a class="btn sel" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Messaggio Highlander Friends'+(gtag()?' ['+gtag()+']':'')+' da '+r.n+': '+msgText)}">Invia su WhatsApp</a>`)+`<p class="mu">${esc(msgNote)}</p></div>`};
 function usedBox(){if(!draft.name.trim())return '';const u=urec();if(!u.used.length&&!u.pend)return '';
  return det('us','🗂 Le mie squadre già usate ('+u.used.length+')',(u.pend?`<p class="mu">Ultima puntata: <b>${esc(u.pend.t)}</b>. Finché il turno è aperto puoi ancora cambiarla.</p><button data-a="cfu">Turno finito: segna ${esc(u.pend.t)} come usata</button>`:'')+(u.used.map((t,i)=>`<div class="row"><span>${esc(t)}</span><button class="inl" data-a="rmu" data-i="${i}" aria-label="Rimuovi ${esc(t)}">✕</button></div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+'<p class="mu">Se hai segnato una squadra per errore, tocca ✕.</p>')}
-function regCard(multi){const lg=regMode==='login',t=multi?' — '+esc(S.name):'';
- return `<div class="card"><h2>👤 ${lg?'Ritrova il tuo nome':'Registrati'}${t}</h2>`+(lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p>`:`<p class="mu">Scrivi il tuo nome e scegli un PIN di 4–6 cifre. Il nome resterà lo stesso per tutta la partita su qualsiasi dispositivo (per usarlo altrove ti serviranno nome e PIN). Non potrai cambiarlo: solo l’admin può modificarlo.</p>`)+`<input id="rn" maxlength="30" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registra il mio nome'}</button><p class="mu">${esc(regMsg)}</p><button data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
-function gateBox(){return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')+`<div class="card"><h2>🔑 Inserisci il codice partita</h2><p class="mu">Per partecipare serve il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. Dopo averlo inserito potrai registrarti e puntare.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">Entra nella partita</button><p class="mu">${esc(jmsg)}</p></div>`+rulesBox()}
+function regScreen(){const lg=regMode==='login';
+ return `<div class="card"><h2>👤 ${lg?'Ritrova il tuo nome':'Registrati'}</h2>`+(lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p>`:`<p class="mu">Scrivi il tuo nome e scegli un PIN di 4–6 cifre. Il nome resterà lo stesso per tutta la partita su qualsiasi dispositivo (per usarlo altrove ti serviranno nome e PIN). Non potrai cambiarlo: solo l’admin può modificarlo.</p>`)+`<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati e invia il nome'}</button><p class="mu">${esc(regMsg)}</p><button data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
+function bindBox(){if(isBound())return '';const bad=bindCode>0;return `<div class="card" style="border-color:var(${bad?'--bad':'--ac'})"><b>${bad?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bad?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<button data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`}
+function gateBox(){const r=idGet();return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')+`<div class="card"><h2>👤 ${esc(r?r.n:'')}</h2><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p></div><div class="card"><h2>🔑 Inserisci il codice partita</h2><p class="mu">Per puntare serve il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. Dopo averlo inserito potrai scegliere la squadra e inviare la puntata.</p><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">Entra nella partita</button><p class="mu">${esc(jmsg)}</p></div>`+rulesBox()}
 function player(){
-  const hasGame=!!(fbBase()&&S.id),can=hasGame&&!!regRec();
+  if(!idGet())return regScreen();
+  const hasGame=!!(fbBase()&&S.id),can=hasGame&&isBound();
   if(!hasGame)return gateBox();
   const us=usedTeams(),elim=isOut();if(us.includes(draft.team)||elim||!can)draft.team='';
   const nm=draft.name.trim(),ok=!!(can&&nm&&draft.team),lk=lockKind(),closed=!!lk,u=nm?urec():null,multi=G.games.length>1;
@@ -191,12 +196,12 @@ function player(){
   const send=ok&&!closed&&!elim
    ?(online?`<button class="sel" data-a="fbsend" ${fbSending?'disabled':''}>📲 Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
      :`<a class="btn sel" data-send="1" href="${waHref}" target="_blank" rel="noopener">📲 Invia la puntata su WhatsApp</a><p class="mu">Si apre WhatsApp: scegli l’organizzatore e premi invio.</p><p class="mu" style="color:#b45309">⚠️ Invio online non attivo: ${!fbBase()?'il codice usato non contiene il collegamento al database':'questa partita non ha un ID'}. Chiedi all’organizzatore di rimandarti il link invito aggiornato e riaprilo (oppure incollane il codice qui sotto in “Hai un codice invito?”).</p>`)
-   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!can?'🔒 Registrati per poter puntare.':!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
+   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':closed?(lk==='t'?'⏰ Tempo scaduto: le puntate sono chiuse. Aspetta il prossimo turno.':'🔒 Turno chiuso: aspetta che l’organizzatore apra il prossimo turno.'):!can?'⏳ Attendi la conferma del tuo nome.':!nm?'Scrivi il tuo nome e scegli una squadra.':'Ora scegli una squadra.'}</p>`;
   return (okmsg?`<div class="card" style="border-color:var(--ac)"><b>${esc(okmsg)}</b></div>`:'')
    +(multi?'<p class="mu" style="margin:10px 0 0">Scegli la partita:</p>'+gbar():'')
    +elimBox()+(ended()?podium():'')+bcBox()
-   +(!regRec()?regCard(multi):'')+`<div class="card" style="${can?'':'opacity:.6'}"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${rnBox()}${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
-   ${can?`<div class="step" style="margin-top:4px">👤 ${esc(draft.name)}</div><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.${regRec()&&regRec().p?' Da un altro dispositivo: inserisci il codice partita, poi “Mi sono già registrato” con nome e PIN.':''}</p>`:`<p class="mu" style="margin:0">🔒 Registrati qui sopra per sbloccare le puntate.</p>`}${regSt==='ok'?'<p class="mu" style="margin:2px 0 0">✅ Il tuo nome è arrivato all’admin.</p>':regSt==='no'||regSt==='err'?'<p class="mu" style="margin:2px 0 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
+   +bindBox()+`<div class="card" style="${can?'':'opacity:.6'}"><h2>La tua puntata${multi?' — '+esc(S.name):''}</h2>${rnBox()}${cdBox()}${lk==='a'?'<div class="cd closed">🔒 Turno chiuso: puntate chiuse<span>Aspetta il prossimo turno</span></div>':''}
+   ${can?`<div class="step" style="margin-top:4px">👤 ${esc(draft.name)}</div><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo. Da un altro dispositivo: apri la pagina, tocca “Mi sono già registrato su un altro dispositivo” e inserisci nome e PIN.</p>`:`<p class="mu" style="margin:0">🔒 Attendi la conferma del nome per sbloccare le puntate.</p>`}${!can?'':regSt==='ok'?'<p class="mu" style="margin:2px 0 0">✅ Il tuo nome è arrivato all’admin.</p>':regSt==='no'||regSt==='err'?'<p class="mu" style="margin:2px 0 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
    <div class="step">1 · Scegli la squadra</div>
    <div class="teams">${SA.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x||elim||!can?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
    ${usedList(us,u)}
@@ -288,23 +293,24 @@ document.addEventListener('click',async e=>{
   if(b.dataset.a==='hm'){hidAdd([b.dataset.id]);render();return}
   if(b.dataset.a==='hma'){if(confirm('Cancellare tutti i messaggi da questo dispositivo? L’admin continua a vederli.')){hidAdd(msgs.map(m=>m.id));render()}return}
   if(b.dataset.a==='msend'){fbMsgSend();return}
-  if(b.dataset.a==='rsnd'){const r=regRec();if(r){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r);regSt='ok'}else{regSt='err';toast(['','Nome già usato da un altro dispositivo','Il database rifiuta la registrazione: avvisa l’admin','Nessuna connessione','Prima inserisci il codice partita'][c])}}render();return}
-  if(b.dataset.a==='reg'){const el=document.getElementById('rn'),n=cleanN(el&&el.value);regDraft=n;if(n.length<2){regMsg='Scrivi il tuo nome (almeno 2 lettere).';render();return}const pin=String(regPin||'').trim();if(!/^\d{4,6}$/.test(pin)){regMsg='Scegli un PIN di 4–6 cifre: ti serve per ritrovare il tuo nome da un altro dispositivo.';render();return}regMsg='Registrazione in corso…';render();setPkey(n,await derK(n,pin));const c=await fbReg(n);if(c){regMsg=['','❌ Nome già usato. Se sei tu su un altro dispositivo, tocca “Mi sono già registrato su un altro dispositivo” e inserisci il tuo PIN; altrimenti aggiungi cognome o iniziale.','❌ Il database ha rifiutato la registrazione: avvisa l’admin.','❌ Nessuna connessione: riprova.','Prima inserisci il codice partita.'][c];if(c===4)dt.cd=true;render();return}regSet({n,rid:pidOf(n),sent:true,p:1});regPin='';regSt='ok';try{localStorage.setItem('uipname',n)}catch(x){}regMsg='';okmsg='✅ Registrato come '+n;setTimeout(()=>{okmsg='';render()},6000);fbMsgs();render();return}
+  if(b.dataset.a==='rsnd'){await bindGame(true);if(bindCode>0)toast(bindMsg);render();return}
+  if(b.dataset.a==='idreset'){if(confirm('Vuoi cancellare la registrazione da questo dispositivo e rifare l’accesso con nome e PIN?')){try{localStorage.removeItem(IDK)}catch(x){}idMem=null;bindMsg='';bindCode=null;regSt='';regMode='login';regMsg='';regPin='';draft.team='';render()}return}
   if(b.dataset.a==='rmode'){regMode=regMode==='login'?'new':'login';regMsg='';render();return}
-  if(b.dataset.a==='rlog'){const el=document.getElementById('rn'),n=cleanN(el&&el.value),pin=String(regPin||'').trim();regDraft=n;
-   if(n.length<2){regMsg='Scrivi il nome con cui ti eri registrato.';render();return}
-   if(!/^\d{4,6}$/.test(pin)){regMsg='Inserisci il tuo PIN (4–6 cifre).';render();return}
-   if(!(fbBase()&&S.id)){regMsg='Prima inserisci il codice partita.';render();return}
-   regMsg='Controllo…';render();
-   try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(pidOf(n))+'.json');if(!x.ok)throw 0;const d=await x.json();
-    if(!d||!d.k){regMsg='❌ Nessun giocatore con questo nome in questa partita: controlla come l’hai scritto.';render();return}
-    const k=await derK(n,pin);if(d.k!==k){regMsg='❌ PIN errato.';render();return}
-    setPkey(n,k);const nn=cleanN(d.n)||n;regSet({n:nn,rid:pidOf(n),sent:true,p:1});regPin='';regMode='new';regMsg='';regSt='ok';
-    try{localStorage.setItem('uipname',nn)}catch(x2){}
-    okmsg='✅ Bentornato, '+nn;setTimeout(()=>{okmsg='';render()},6000);fbMsgs()
-   }catch(e){regMsg='❌ Nessuna connessione: riprova.'}
-   render();return}
-  if(b.dataset.a==='pk'){if(!(fbBase()&&S.id&&regRec())){toast('🔒 Registrati per poter puntare');return}const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
+  if(b.dataset.a==='reg'||b.dataset.a==='rlog'){const lg=b.dataset.a==='rlog',el=document.getElementById('rn'),n=cleanN(el&&el.value),pin=String(regPin||'').trim();regDraft=n;
+   if(n.length<2){regMsg=lg?'Scrivi il nome con cui ti eri registrato.':'Scrivi il tuo nome (almeno 2 lettere).';render();return}
+   if(!/^\d{4,6}$/.test(pin)){regMsg=lg?'Inserisci il tuo PIN (4–6 cifre).':'Scegli un PIN di 4–6 cifre: ti serve per ritrovare il tuo nome da un altro dispositivo.';render();return}
+   regMsg=lg?'Controllo…':'Registrazione in corso…';render();
+   const q=await gReg(n,pin,!lg),c=q.c;
+   if(c===1){regMsg=lg?'❌ PIN errato.':'❌ Nome già usato da un altro giocatore. Se sei tu su un altro dispositivo, tocca “Mi sono già registrato su un altro dispositivo” e inserisci il tuo PIN; altrimenti aggiungi cognome o iniziale.';render();return}
+   if(c===3){regMsg='❌ Nessuna connessione: riprova.';render();return}
+   if(c===6){regMsg='❌ Nessun giocatore con questo nome: controlla come l’hai scritto. Se ti eri registrato prima di questo aggiornamento, usa “Prima registrazione” con lo stesso nome e PIN.';render();return}
+   const nn=q.n||n;
+   idPut({n:nn,rid:pidOf(nn),pin,s:{},gn:{},login:(lg&&c===5)?1:undefined});
+   regPin='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;
+   try{localStorage.setItem('uipname',nn)}catch(x){}
+   okmsg=lg?'✅ Bentornato, '+nn:'✅ Registrato come '+nn;setTimeout(()=>{okmsg='';render()},6000);
+   render();if(fbBase()&&S.id){bindGame();fbMsgs()}return}
+  if(b.dataset.a==='pk'){if(!(fbBase()&&S.id&&isBound())){toast('⏳ Attendi la conferma del tuo nome');return}const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
   if(b.dataset.a==='cfu'){const o=uall(),k=ukey(),r=urec();if(r.pend){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}render();return}
   if(b.dataset.a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
   if(b.dataset.a==='cpm'){recordSend();try{await navigator.clipboard.writeText(text(draft.name,draft.team));cmsg='Messaggio copiato ✅'}catch(x){const t=document.getElementById('msgp');if(t){t.focus();t.select()}cmsg='Seleziona il testo e copialo a mano'}render();return}
@@ -400,7 +406,7 @@ setInterval(()=>{const i=cdInfo();
 async function fbClear(){}
 async function fbState(){}
 async function fbSend(){
- const nm=cleanN(draft.name),tm=draft.team;if(!nm||!tm||fbSending||!fbBase()||!S.id||!regRec())return;
+ const nm=cleanN(draft.name),tm=draft.team;if(!nm||!tm||fbSending||!fbBase()||!S.id||!regRec()||!isBound())return;
  await fbRS();{const lk=lockKind();if(lk){toast(lockText(lk));return}}
  fbSending=true;fbmsg='Invio in corso…';render();lastSt='rete';
  try{
@@ -426,8 +432,27 @@ async function fbReg(n){if(!(fbBase()&&S.id))return 4;const u=fbBase()+'/players
  try{const x=await fetch(u);if(x.ok){const d=await x.json();if(d&&d.k&&d.k!==pkey(n))return 1}
   const y=await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:pkey(n),ts:{'.sv':'timestamp'}})});return y.ok?0:2}catch(e){return 3}}
 function setRs(v){if(regSt!==v){regSt=v;render()}}
-async function fbNm(){const r=regRec();if(!r||!(fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}const d=await x.json(),n=d&&cleanN(d.n);if(d===null){if(!r.sent){const c=await fbReg(r.n);if(c===0){r.sent=true;regSet(r);setRs('ok');return}}setRs('no');return}setRs('ok');
- if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}r.n=n;regSet(r);render()}}catch(e){}}
+/* Registro globale dei nomi: serve a bloccare i doppioni e a ritrovare il nome da un altro dispositivo PRIMA di inserire il codice partita.
+   c: 0 ok · 1 nome già preso con altro PIN · 3 offline · 5 registro non disponibile (si verifica dopo, alla partita) · 6 nome non trovato */
+async function gReg(n,pin,create){const base=fbBase()||FB_DEFAULT,rid=pidOf(n),u=base+'/registry/'+encodeURIComponent(rid)+'.json',k=(await sha('hl|*|'+rid+'|'+pin)).slice(0,32);
+ try{const x=await fetch(u);if(!x.ok)return{c:5};const d=await x.json();
+  if(d&&d.k)return d.k===k?{c:0,n:cleanN(d.n)||n}:{c:1};
+  if(!create)return{c:6};
+  const y=await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:k,ts:{'.sv':'timestamp'}})});return y.ok?{c:0,n:n}:{c:5}}catch(e){return{c:3}}}
+/* Invia il nome registrato all'admin della partita (un solo record per nome, chiave = nome normalizzato) */
+async function bindGame(force){const r=idGet();if(!r||!(fbBase()&&S.id))return 4;if(!force&&r.s&&r.s[S.id])return 0;if(binding)return -1;
+ binding=true;bindMsg='';bindCode=null;const gid=S.id;let c=0;
+ try{if(r.pin)setPkey(r.n,await derK(r.n,r.pin));
+  if(r.login&&!(r.s&&r.s[gid])){const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)c=3;else{const d=await x.json();if(!d||!d.k)c=6}}
+  if(!c)c=await fbReg(r.n)}catch(e){c=3}
+ binding=false;if(S.id!==gid)return c;
+ if(c===0){idMark(o=>{(o.s=o.s||{})[gid]=1;delete o.login});regSt='ok';bindMsg=''}
+ else{regSt='err';bindMsg={1:'❌ Il nome «'+r.n+'» risulta già registrato in questa partita con un altro PIN. Se sei tu, rifai l’accesso con il PIN giusto.',2:'❌ Il database ha rifiutato la registrazione: avvisa l’admin.',3:'❌ Nessuna connessione: riprova.',6:'❌ Nessun giocatore con il nome «'+r.n+'» in questa partita: controlla come l’hai scritto e rifai l’accesso.'}[c]||'❌ Invio del nome non riuscito: riprova.'}
+ bindCode=c;render();return c}
+async function fbNm(){const r0=idGet();if(!r0||!(fbBase()&&S.id))return;
+ if(!(r0.s&&r0.s[S.id])){if(bindCode!==1&&bindCode!==6)await bindGame();return}
+ const r=regRec();try{const x=await fetch(fbBase()+'/players/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}const d=await x.json(),n=d&&cleanN(d.n);if(d===null){setRs('no');return}setRs('ok');
+ if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}idMark(q=>{q.gn=q.gn||{};q.gn[S.id]=n});render()}}catch(e){}}
 async function fbMsgs(){const r=regRec();if(!(r&&fbBase()&&S.id))return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==S.id||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=S.id;render()}}catch(e){}}
 async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0,300);if(!r||!t||msgBusy||!(fbBase()&&S.id))return;msgBusy=true;msgNote='';render();
  try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json',{method:'POST',body:JSON.stringify({f:'p',n:r.n,t:t,k:pkey(r.n),ts:{'.sv':'timestamp'}})});if(!x.ok)throw 0;msgText='';msgNote='✅ Messaggio inviato';await fbMsgs()}catch(e){msgNote='❌ Invio non riuscito. Riprova più tardi.'}msgBusy=false;render()}
