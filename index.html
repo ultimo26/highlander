@@ -183,7 +183,7 @@ function betScreen(){
  return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')
  +(elim?`<div class="card no"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
- +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<button data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`:'')
+ +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi il PIN: tocca il pulsante e accedi con nome e PIN.<br>Se lo hai dimenticato: chiedi all’organizzatore di resettare il tuo PIN, poi tocca il pulsante e scegli «Prima registrazione» con un nuovo PIN.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`:'')
  +`<div class="card" style="${can?'':'opacity:.6'}"><h2>La tua puntata — ${esc(S.name)}</h2>${rnBox()}${cdBox()}
   <div class="step" style="margin-top:4px">👤 ${esc(nm)}</div>
   ${can&&(regSt==='no'||regSt==='err')?'<p class="mu" style="margin:2px 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
