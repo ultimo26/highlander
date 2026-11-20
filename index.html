@@ -14,6 +14,7 @@ h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 8px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .mu{color:var(--mu);font-size:14px}
 textarea{min-height:70px}
+.pin{-webkit-text-security:disc;text-security:disc}
 button,input,textarea{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:11px;width:100%;margin:4px 0}
 button{cursor:pointer;text-align:center}
 button:disabled{opacity:.5;cursor:default}
@@ -151,7 +152,7 @@ function regScreen(){const lg=regMode==='login';
  return `<div class="card"><h2>👤 ${lg?'Ritrova il tuo nome':'Registrati'}</h2>`+
  (lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p><p class="mu">🔑 <b>Hai dimenticato il PIN?</b> Scrivi all’organizzatore: dopo il reset torna a «Prima registrazione» e registrati con lo stesso nome e un nuovo PIN.</p>`
     :`<p class="mu">Scrivi il tuo nome e scegli un PIN di 4–6 cifre. Il nome resta lo stesso per tutta la partita e lo puoi usare su altri dispositivi con nome e PIN. Non potrai cambiarlo: solo l’admin può modificarlo.</p>`)+
- `<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati'}</button><p class="mu">${esc(regMsg)}</p><button class="link" data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
+ `<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" class="pin" type="text" name="hl-pin" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati'}</button><p class="mu">${esc(regMsg)}</p><button class="link" data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
 
 /* 2 · codice partita */
 const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
