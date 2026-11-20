@@ -14,6 +14,7 @@ h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 8px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .mu{color:var(--mu);font-size:14px}
 textarea{min-height:70px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chips button{width:auto;flex:1 1 40%;margin:0}
 .pin{-webkit-text-security:disc;text-security:disc}
 button,input,textarea{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:11px;width:100%;margin:4px 0}
 button{cursor:pointer;text-align:center}
@@ -83,7 +84,7 @@ const shortCode=v=>{const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,
 /* ================= stato ================= */
 let G=null,S=null;                       // G = dati partita salvati, S = partita corrente
 let stD=null,stFor='',rsClosed=false,rsFor='',bc=[];
-let msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='';
+let msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='',regAdding=false;
 let regMode='new',regDraft='',regPin='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
 const save=()=>{if(G)lset('uipj',JSON.stringify(G))};
 function norm(){
@@ -100,11 +101,18 @@ const teams=()=>S&&S.cfg.teams&&S.cfg.teams.length>1?S.cfg.teams:DEF;
 const canon=t=>teams().find(x=>x.toLowerCase()===String(t).trim().toLowerCase());
 
 /* identità del giocatore (nome + PIN), uguale su ogni dispositivo */
-const IDK='uipid';let idMem=null;
-function idGet(){try{const r=JSON.parse(lget(IDK));if(r&&r.n&&r.rid)return r}catch(e){}return idMem&&idMem.n?idMem:null}
-function idPut(r){idMem=r;lset(IDK,JSON.stringify(r))}
-function idMark(f){const r=idGet();if(!r)return;f(r);idPut(r)}
-(function(){if(idGet())return;try{const o=JSON.parse(lget('uipreg'))||{},k=Object.keys(o).find(x=>o[x]&&o[x].n&&o[x].rid);if(!k)return;const s={};Object.keys(o).forEach(x=>{if(o[x]&&o[x].rid===o[k].rid&&o[x].sent)s[x]=1});idPut({n:o[k].n,rid:o[k].rid,s,gn:{}})}catch(e){}})();
+/* Profili: su ogni dispositivo si possono avere più nomi (es. giocatore1, giocatore2…), ognuno con il proprio PIN */
+const IDK='uipid',IDS='uipids';let idsMem=null;
+function idsGet(){let o=null;try{o=JSON.parse(lget(IDS))}catch(e){}if(!o||!Array.isArray(o.list))o=idsMem&&Array.isArray(idsMem.list)?idsMem:{cur:'',list:[]};return o}
+function idsPut(o){idsMem=o;lset(IDS,JSON.stringify(o))}
+function idGet(){const o=idsGet(),r=o.list.find(x=>x&&x.rid===o.cur)||o.list.find(x=>x&&x.n&&x.rid);return r&&r.n&&r.rid?r:null}
+function idPut(r){const o=idsGet(),i=o.list.findIndex(x=>x.rid===r.rid);if(i>=0)o.list[i]=r;else o.list.push(r);o.cur=r.rid;idsPut(o)}
+function idMark(f,rid){const o=idsGet(),i=o.list.findIndex(x=>x.rid===(rid||(idGet()||{}).rid));if(i<0)return;f(o.list[i]);idsPut(o)}
+function rmProfile(rid){const o=idsGet();o.list=o.list.filter(x=>x.rid!==rid);o.cur=o.list[0]?o.list[0].rid:'';idsPut(o)}
+/* migrazione dalle versioni precedenti (un solo profilo) */
+(function(){if(idsGet().list.length)return;
+ try{const r=JSON.parse(lget(IDK));if(r&&r.n&&r.rid){idPut(r);localStorage.removeItem(IDK);return}}catch(e){}
+ try{const o=JSON.parse(lget('uipreg'))||{},k=Object.keys(o).find(x=>o[x]&&o[x].n&&o[x].rid);if(!k)return;const s={};Object.keys(o).forEach(x=>{if(o[x]&&o[x].rid===o[k].rid&&o[x].sent)s[x]=1});idPut({n:o[k].n,rid:o[k].rid,s,gn:{}});localStorage.removeItem('uipreg')}catch(e){}})();
 const regRec=()=>{const r=idGet();if(!r)return null;const g=S&&S.id&&r.gn&&r.gn[S.id];return Object.assign({},r,{n:g||r.n})};
 const me=()=>{const r=regRec();return r?r.n:''};
 const isBound=()=>{const r=idGet();return !!(r&&S&&S.id&&r.s&&r.s[S.id])};
@@ -149,23 +157,33 @@ const dt={};
 
 /* 1 · registrazione */
 function regScreen(){const lg=regMode==='login';
- return `<div class="card"><h2>👤 ${lg?'Ritrova il tuo nome':'Registrati'}</h2>`+
+ return `<div class="card"><h2>${idGet()?'➕ Nuovo profilo — ':'👤 '}${lg?'Ritrova il tuo nome':'Registrati'}</h2>`+
  (lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p><p class="mu">🔑 <b>Hai dimenticato il PIN?</b> Scrivi all’organizzatore: dopo il reset torna a «Prima registrazione» e registrati con lo stesso nome e un nuovo PIN.</p>`
     :`<p class="mu">Scrivi il tuo nome e scegli un PIN di 4–6 cifre. Il nome resta lo stesso per tutta la partita e lo puoi usare su altri dispositivi con nome e PIN. Non potrai cambiarlo: solo l’admin può modificarlo.</p>`)+
- `<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" class="pin" type="text" name="hl-pin" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati'}</button><p class="mu">${esc(regMsg)}</p><button class="link" data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
+ `<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" class="pin" type="text" name="hl-pin" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati'}</button><p class="mu">${esc(regMsg)}</p><button class="link" data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button>${idGet()?'<button class="link" data-a="addcancel">← Annulla</button>':''}</div>`}
 
 /* 2 · codice partita */
 const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
 function gateScreen(){const r=idGet();
  const off=G&&S&&!ready()?`<div class="card" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><p class="mu" style="margin:4px 0 0">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</p></div>`:'';
  return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+
- `<div class="card"><h2>👤 ${esc(r.n)}</h2><p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p></div>`+off+
+ profBar()+off+
  `<div class="card"><h2>🔑 Inserisci il codice partita</h2><p class="mu">Serve il <b>codice partita</b> di 6 caratteri (es. K7P4QX) che ti manda l’organizzatore. Dopo averlo inserito potrai scegliere la squadra.</p>${codeForm('Entra nella partita')}</div>`+
  rulesBox()+exitBox()}
 
+/* barra profili */
+function profBar(){const o=idsGet(),cur=idGet();if(!cur)return '';
+ const nm=r=>(r.gn&&S&&S.id&&r.gn[S.id])||r.n;
+ const out=r=>{const n=nm(r).trim().toLowerCase();return !!stD&&!!S&&stFor===S.id&&Array.isArray(stD.out)&&stD.out.some(x=>String(x).trim().toLowerCase()===n)};
+ const multi=o.list.length>1;
+ return `<div class="card"><h2>👤 ${multi?'Profili su questo dispositivo':esc(nm(cur))}</h2>`+
+  (multi?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${out(r)?'❌ ':''}${esc(nm(r))}</button>`).join('')}</div>`:`<p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>`)+
+  `<button class="link" data-a="padd">➕ Aggiungi un altro profilo (altro nome e PIN)</button></div>`}
+function resetProf(){regSt='';bindCode=null;bindMsg='';draft.team='';msgs=[];msgFor='';msgText='';msgNote='';fbmsg='';okmsg=''}
+
 /* 3 · puntata */
 const rulesBox=()=>det('rg','📜 Regolamento','<div style="white-space:pre-wrap">'+esc(G&&G.rules||DEFRULES)+'</div>');
-const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="idreset">Non sei tu? Esci da questo dispositivo</button></div>`;
+const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="prm">Rimuovi questo profilo da questo dispositivo</button></div>`;
 function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card ok"><h2>📣 Avvisi dell’admin</h2>${v.map(m=>`<div class="mg"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Nascondi" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''}
 function msgBox(){const r=regRec();if(!r||!isBound())return '';const vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
  const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'':'p'}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')+'<button data-a="hma">🗑 Cancella tutti i messaggi</button>':'<p class="mu">Nessun messaggio.</p>';
@@ -180,7 +198,7 @@ function betScreen(){
  const send=ok?`<button class="sel" data-a="fbsend" ${sending?'disabled':''}>📲 Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':lk?lockText(lk):!can?'⏳ Attendi la conferma del tuo nome.':'Scegli una squadra.'}</p>`;
  const used=us.length||u.pend?det('us','🗂 Le mie squadre già usate ('+us.length+')',(us.map((t,i)=>`<div class="row"><span>${esc(t)}</span><button class="inl" data-a="rmu" data-i="${i}" aria-label="Rimuovi ${esc(t)}">✕</button></div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+(u.pend?`<p class="mu">⏳ In corso: <b>${esc(u.pend.t)}</b> (diventa usata a turno chiuso)</p>`:'')+'<p class="mu">Se una squadra è segnata per errore, tocca ✕.</p>'):'';
- return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')
+ return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+profBar()
  +(elim?`<div class="card no"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
  +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi il PIN: tocca il pulsante e accedi con nome e PIN.<br>Se lo hai dimenticato: chiedi all’organizzatore di resettare il tuo PIN, poi tocca il pulsante e scegli «Prima registrazione» con un nuovo PIN.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`:'')
@@ -196,7 +214,7 @@ function betScreen(){
  +exitBox()}
 
 function view(){
- if(!idGet())return regScreen();
+ if(!idGet()||regAdding)return regScreen();
  if(!ready())return gateScreen();
  return betScreen()}
 function render(){
@@ -221,14 +239,16 @@ async function bindGame(force){const r=idGet();if(!r||!ready())return 4;if(!forc
   if(r.login&&!(r.s&&r.s[gid])){const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)c=3;else{const d=await x.json();if(!d||!d.k)c=6}}
   if(!c)c=await fbReg(r.n)}catch(e){c=3}
  binding=false;if(!S||S.id!==gid)return c;
- if(c===0){idMark(o=>{(o.s=o.s||{})[gid]=1;delete o.login});regSt='ok';bindMsg=''}
+ if(c===0)idMark(o=>{(o.s=o.s||{})[gid]=1;delete o.login},r.rid);
+ if((idGet()||{}).rid!==r.rid){render();return c}
+ if(c===0){regSt='ok';bindMsg=''}
  else{regSt='err';bindMsg={1:'❌ Il nome «'+r.n+'» risulta già registrato in questa partita con un altro PIN. Se sei tu, rifai l’accesso con il PIN giusto.',2:'❌ Il database ha rifiutato la registrazione: avvisa l’admin.',3:'❌ Nessuna connessione: riprova.',6:'❌ Nessun giocatore con il nome «'+r.n+'» in questa partita: controlla come l’hai scritto e rifai l’accesso.'}[c]||'❌ Invio del nome non riuscito: riprova.'}
  bindCode=c;render();return c}
 /* Controlla che l'admin abbia ancora il nome (e recepisce un'eventuale rinomina) */
 async function fbNm(){const r0=idGet();if(!r0||!ready())return;
  if(!(r0.s&&r0.s[S.id])){if(bindCode!==1&&bindCode!==6)await bindGame();return}
- const r=regRec(),gid=S.id;try{const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}const d=await x.json(),n=d&&cleanN(d.n);if(d===null){setRs('no');return}setRs('ok');
-  if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}idMark(q=>{q.gn=q.gn||{};q.gn[gid]=n});render()}}catch(e){}}
+ const r=regRec(),gid=S.id;try{const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}if((idGet()||{}).rid!==r.rid)return;const d=await x.json(),n=d&&cleanN(d.n);if(d===null){setRs('no');return}setRs('ok');
+  if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}idMark(q=>{q.gn=q.gn||{};q.gn[gid]=n},r.rid);render()}}catch(e){}}
 function setRs(v){if(regSt!==v){regSt=v;render()}}
 /* Stato turno (aperto/chiuso) */
 async function fbRS(){if(!ready())return;if(rsFor!==S.id){rsFor=S.id;rsClosed=false}
@@ -242,7 +262,7 @@ async function fbSt(){if(!ready())return;const id=S.id;try{const x=await fetch(f
 /* Avvisi dell'admin a tutti */
 async function fbBc(){if(!ready())return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/__tutti.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-3):[];if(JSON.stringify(a)!==JSON.stringify(bc)){bc=a;render()}}catch(e){}}
 /* Messaggi con l'admin */
-async function fbMsgs(){const r=regRec();if(!(r&&ready()))return;const gid=S.id;try{const x=await fetch(fbBase()+'/msgs/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==gid||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=gid;render()}}catch(e){}}
+async function fbMsgs(){const r=regRec();if(!(r&&ready()))return;const gid=S.id;try{const x=await fetch(fbBase()+'/msgs/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok||(idGet()||{}).rid!==r.rid)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==gid||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=gid;render()}}catch(e){}}
 async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0,300);if(!r||!t||msgBusy||!ready()||!isBound())return;msgBusy=true;msgNote='';render();
  try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json',{method:'POST',body:JSON.stringify({f:'p',n:r.n,t:t,k:pkey(r.n),ts:{'.sv':'timestamp'}})});if(!x.ok)throw 0;msgText='';msgNote='✅ Messaggio inviato';await fbMsgs()}catch(e){msgNote='❌ Invio non riuscito. Riprova più tardi.'}msgBusy=false;render()}
 /* Invio puntata */
@@ -283,7 +303,7 @@ document.addEventListener('click',async e=>{
   if(c===6){regMsg='❌ Nessun giocatore con questo nome: controlla come l’hai scritto. Se l’organizzatore ha resettato il tuo PIN, tocca “Prima registrazione” e registrati con lo stesso nome e un nuovo PIN.';render();return}
   const nn=q.n||n;
   idPut({n:nn,rid:pidOf(nn),pin,s:{},gn:{},login:(lg&&c===5)?1:undefined});
-  regPin='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;lset('uipname',nn);
+  resetProf();regAdding=false;regPin='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;lset('uipname',nn);
   okmsg=lg?'✅ Bentornato, '+nn:'✅ Registrato come '+nn;setTimeout(()=>{okmsg='';render()},6000);
   render();if(ready()){bindGame();poll()}return}
  if(a==='joinc'){const el=document.getElementById('jcd'),v=(el&&el.value)||'',sc=shortCode(v);let ok=false;
@@ -291,7 +311,12 @@ document.addEventListener('click',async e=>{
    if(!ok)jmsg='Codice non trovato: controlla le lettere o chiedi all’organizzatore'}
   else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}
   if(ok)gotIn();else{dt.ot=true;render()}return}
- if(a==='idreset'){if(confirm('Vuoi uscire da questo dispositivo? Per rientrare ti serviranno nome e PIN.')){try{localStorage.removeItem(IDK)}catch(x){}idMem=null;bindMsg='';bindCode=null;regSt='';regMode='login';regMsg='';regPin='';draft.team='';render()}return}
+ if(a==='sp'){const o=idsGet();if(o.list.some(x=>x.rid===b.dataset.rid)&&o.cur!==b.dataset.rid){o.cur=b.dataset.rid;idsPut(o);resetProf();regAdding=false;render();poll()}return}
+ if(a==='padd'){regAdding=true;regMode='new';regMsg='';regDraft='';regPin='';render();return}
+ if(a==='addcancel'){regAdding=false;regMsg='';regPin='';render();return}
+ if(a==='idreset'||a==='prm'){const r=idGet();if(!r)return;
+  const q=a==='prm'?'Rimuovere il profilo «'+r.n+'» da questo dispositivo? Per riaverlo ti serviranno nome e PIN.':'Vuoi cancellare il profilo «'+r.n+'» da questo dispositivo e rifare l’accesso con nome e PIN?';
+  if(confirm(q)){rmProfile(r.rid);resetProf();regAdding=a==='idreset';regMode='login';regMsg='';regPin='';regDraft='';render();if(a==='prm'&&idGet())poll()}return}
  if(a==='rsnd'){await bindGame(true);if(bindCode>0)toast(bindMsg);render();return}
  if(a==='pk'){if(!isBound()){toast('⏳ Attendi la conferma del tuo nome');return}const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
  if(a==='fbsend'){fbSend();return}
