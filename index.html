@@ -13,6 +13,7 @@ body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,
 h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 8px}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:12px 0}
 .mu{color:var(--mu);font-size:14px}
+textarea{min-height:70px}
 button,input,textarea{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:11px;width:100%;margin:4px 0}
 button{cursor:pointer;text-align:center}
 button:disabled{opacity:.5;cursor:default}
@@ -32,6 +33,7 @@ button:disabled{opacity:.5;cursor:default}
 .cd b{font-size:26px;display:block;font-variant-numeric:tabular-nums}.cd span{font-size:13px;color:var(--mu)}
 .cd.last,.cd.closed{border-color:var(--bad);color:var(--bad)}
 .ok{border-color:var(--ac)}.no{border:2px solid var(--bad);text-align:center}
+.mg.p{border-color:var(--bd)}
 .mg{border:1px solid var(--ac);border-radius:10px;padding:8px;margin:6px 0}
 summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
 </style>
@@ -80,6 +82,7 @@ const shortCode=v=>{const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,
 /* ================= stato ================= */
 let G=null,S=null;                       // G = dati partita salvati, S = partita corrente
 let stD=null,stFor='',rsClosed=false,rsFor='',bc=[];
+let msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='';
 let regMode='new',regDraft='',regPin='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
 const save=()=>{if(G)lset('uipj',JSON.stringify(G))};
 function norm(){
@@ -146,7 +149,7 @@ const dt={};
 /* 1 · registrazione */
 function regScreen(){const lg=regMode==='login';
  return `<div class="card"><h2>👤 ${lg?'Ritrova il tuo nome':'Registrati'}</h2>`+
- (lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p>`
+ (lg?`<p class="mu">Inserisci il nome con cui ti sei registrato e il tuo PIN: ritroverai la stessa identità su questo dispositivo.</p><p class="mu">🔑 <b>Hai dimenticato il PIN?</b> Scrivi all’organizzatore: dopo il reset torna a «Prima registrazione» e registrati con lo stesso nome e un nuovo PIN.</p>`
     :`<p class="mu">Scrivi il tuo nome e scegli un PIN di 4–6 cifre. Il nome resta lo stesso per tutta la partita e lo puoi usare su altri dispositivi con nome e PIN. Non potrai cambiarlo: solo l’admin può modificarlo.</p>`)+
  `<input id="rn" maxlength="30" autocomplete="off" placeholder="Il tuo nome" value="${esc(regDraft)}"><input id="rp" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN (4–6 cifre)" value="${esc(regPin)}"><button class="sel" data-a="${lg?'rlog':'reg'}">${lg?'Ritrova il mio nome':'Registrati'}</button><p class="mu">${esc(regMsg)}</p><button class="link" data-a="rmode">${lg?'← Prima registrazione':'Mi sono già registrato su un altro dispositivo'}</button></div>`}
 
@@ -163,6 +166,9 @@ function gateScreen(){const r=idGet();
 const rulesBox=()=>det('rg','📜 Regolamento','<div style="white-space:pre-wrap">'+esc(G&&G.rules||DEFRULES)+'</div>');
 const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="idreset">Non sei tu? Esci da questo dispositivo</button></div>`;
 function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card ok"><h2>📣 Avvisi dell’admin</h2>${v.map(m=>`<div class="mg"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Nascondi" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''}
+function msgBox(){const r=regRec();if(!r||!isBound())return '';const vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
+ const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'':'p'}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')+'<button data-a="hma">🗑 Cancella tutti i messaggi</button>':'<p class="mu">Nessun messaggio.</p>';
+ return `<div class="card"><h2>💬 Messaggi con l’admin</h2>${th}<textarea id="mt" maxlength="300" placeholder="Scrivi un messaggio all’admin">${esc(msgText)}</textarea><button class="sel" data-a="msend" ${msgBusy?'disabled':''}>Invia messaggio</button><p class="mu">${esc(msgNote)}</p></div>`}
 function rnBox(){if(!stD||stFor!==S.id)return '';
  if(stD.rn>0)return `<div style="font-weight:700;font-size:18px;margin:2px 0 6px">🔢 Turno ${stD.rn}${stD.rs===0?' <span class="mu" style="font-weight:400">(non ancora iniziato)</span>':''}</div>`;
  if(stD.rc>0)return `<div style="margin:2px 0 6px"><b>🔢 Turno ${stD.rc} concluso</b><div class="mu">Aspetta che l’organizzatore apra il prossimo turno.</div></div>`;return ''}
@@ -184,7 +190,7 @@ function betScreen(){
   <div class="teams">${T.map(t=>{const x=us.includes(t);return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x||elim||!can?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${esc(t)}${x?' (usata)':''}</button>`}).join('')}</div>
   <div class="sendbar"><div class="step" style="margin:0 0 4px">2 · Invia</div>${send}</div>
   ${u.pend?`<div class="cd" style="border-color:var(--ac);color:var(--tx)">✅ Puntata inviata<b>${esc(u.pend.t)}</b><span>Finché il turno è aperto puoi cambiarla</span></div>`:''}</div>`
- +used+rulesBox()
+ +msgBox()+used+rulesBox()
  +det('ot','⚙️ Altro',`<b>Cambia partita</b><p class="mu">Hai un nuovo codice partita? Inseriscilo qui.</p>${codeForm('Usa codice')}`)
  +exitBox()}
 
@@ -234,6 +240,10 @@ async function fbSt(){if(!ready())return;const id=S.id;try{const x=await fetch(f
  if(wiped||stFor!==id||JSON.stringify(d)!==JSON.stringify(stD)){stD=d;stFor=id;render()}}catch(e){}}
 /* Avvisi dell'admin a tutti */
 async function fbBc(){if(!ready())return;try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/__tutti.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-3):[];if(JSON.stringify(a)!==JSON.stringify(bc)){bc=a;render()}}catch(e){}}
+/* Messaggi con l'admin */
+async function fbMsgs(){const r=regRec();if(!(r&&ready()))return;const gid=S.id;try{const x=await fetch(fbBase()+'/msgs/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)return;const d=await x.json(),a=d?Object.keys(d).map(k=>Object.assign({id:k},d[k])).filter(m=>m&&m.t).sort((p,q)=>(p.ts||0)-(q.ts||0)).slice(-15):[];if(msgFor!==gid||JSON.stringify(a)!==JSON.stringify(msgs)){msgs=a;msgFor=gid;render()}}catch(e){}}
+async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0,300);if(!r||!t||msgBusy||!ready()||!isBound())return;msgBusy=true;msgNote='';render();
+ try{const x=await fetch(fbBase()+'/msgs/'+S.id+'/'+encodeURIComponent(r.rid)+'.json',{method:'POST',body:JSON.stringify({f:'p',n:r.n,t:t,k:pkey(r.n),ts:{'.sv':'timestamp'}})});if(!x.ok)throw 0;msgText='';msgNote='✅ Messaggio inviato';await fbMsgs()}catch(e){msgNote='❌ Invio non riuscito. Riprova più tardi.'}msgBusy=false;render()}
 /* Invio puntata */
 async function fbSend(){
  const nm=cleanN(me()),tm=draft.team;if(!nm||!tm||sending||!ready()||!isBound())return;
@@ -245,18 +255,18 @@ async function fbSend(){
   fbmsg='✅ Puntata registrata: '+tm+'. Finché il turno è aperto puoi cambiarla.';recordSend(tm);
  }catch(e){fbmsg='❌ Invio non riuscito (codice: '+st+'). Controlla la connessione e riprova.'}
  sending=false;render()}
-function poll(){fbSt();fbRS();fbNm();fbBc()}
+function poll(){fbSt();fbRS();fbNm();fbBc();fbMsgs()}
 
 /* ================= ingresso in partita ================= */
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  const old=S&&S.id;G={games:j.games,cur:j.games.length-1,fb:j.fb,rules:j.rules};norm();
- if(!S)return false;if(S.id!==old){stD=null;stFor='';bc=[];rsClosed=false;rsFor='';regSt='';bindCode=null;bindMsg=''}
+ if(!S)return false;if(S.id!==old){stD=null;stFor='';bc=[];msgs=[];msgFor='';rsClosed=false;rsFor='';regSt='';bindCode=null;bindMsg=''}
  draft.team='';save();return true}
 function gotIn(){okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame().then(poll);poll();setTimeout(()=>{okmsg='';render()},8000)}
 
 /* ================= eventi ================= */
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
-document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='rp')regPin=e.target.value.replace(/\D/g,'').slice(0,6)});
+document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='rp')regPin=e.target.value.replace(/\D/g,'').slice(0,6)});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const q={jcd:'[data-a=joinc]',rn:'[data-a=reg],[data-a=rlog]',rp:'[data-a=reg],[data-a=rlog]'}[e.target.id];if(!q)return;const b=document.querySelector(q);if(b){e.preventDefault();b.click()}});
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
@@ -267,9 +277,9 @@ document.addEventListener('click',async e=>{
   if(!/^\d{4,6}$/.test(pin)){regMsg=lg?'Inserisci il tuo PIN (4–6 cifre).':'Scegli un PIN di 4–6 cifre: ti serve per ritrovare il tuo nome da un altro dispositivo.';render();return}
   regMsg=lg?'Controllo…':'Registrazione in corso…';render();
   const q=await gReg(n,pin,!lg),c=q.c;
-  if(c===1){regMsg=lg?'❌ PIN errato.':'❌ Nome già usato da un altro giocatore. Se sei tu su un altro dispositivo, tocca “Mi sono già registrato su un altro dispositivo” e inserisci il tuo PIN; altrimenti aggiungi cognome o iniziale.';render();return}
+  if(c===1){regMsg=lg?'❌ PIN errato. Se l’hai dimenticato, chiedi all’organizzatore di resettarlo.':'❌ Nome già usato da un altro giocatore. Se sei tu su un altro dispositivo, tocca “Mi sono già registrato su un altro dispositivo” e inserisci il tuo PIN; altrimenti aggiungi cognome o iniziale.';render();return}
   if(c===3){regMsg='❌ Nessuna connessione: riprova.';render();return}
-  if(c===6){regMsg='❌ Nessun giocatore con questo nome: controlla come l’hai scritto. Se ti eri registrato prima di questo aggiornamento, usa “Prima registrazione” con lo stesso nome e PIN.';render();return}
+  if(c===6){regMsg='❌ Nessun giocatore con questo nome: controlla come l’hai scritto. Se l’organizzatore ha resettato il tuo PIN, tocca “Prima registrazione” e registrati con lo stesso nome e un nuovo PIN.';render();return}
   const nn=q.n||n;
   idPut({n:nn,rid:pidOf(nn),pin,s:{},gn:{},login:(lg&&c===5)?1:undefined});
   regPin='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;lset('uipname',nn);
@@ -286,6 +296,8 @@ document.addEventListener('click',async e=>{
  if(a==='fbsend'){fbSend();return}
  if(a==='rmu'){const o=uall(),k=ukey(),r=urec();r.used.splice(+b.dataset.i,1);o[k]=r;usave(o);render();return}
  if(a==='hm'){hidAdd(b.dataset.id);render();return}
+ if(a==='hma'){if(confirm('Cancellare tutti i messaggi da questo dispositivo? L’admin continua a vederli.')){msgs.forEach(m=>hidAdd(m.id));render()}return}
+ if(a==='msend'){fbMsgSend();return}
 });
 addEventListener('hashchange',()=>{if(location.hash.indexOf('#jg')===0&&joinCode(location.hash)&&idGet())gotIn()});
 
