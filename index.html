@@ -172,13 +172,14 @@ function gateScreen(){const r=idGet();
  rulesBox()+exitBox()}
 
 /* barra profili */
+const closedReg=()=>!!(stD&&S&&stFor===S.id&&stD.rc>0);
 function profBar(){const o=idsGet(),cur=idGet();if(!cur)return '';
  const nm=r=>(r.gn&&S&&S.id&&r.gn[S.id])||r.n;
  const out=r=>{const n=nm(r).trim().toLowerCase();return !!stD&&!!S&&stFor===S.id&&Array.isArray(stD.out)&&stD.out.some(x=>String(x).trim().toLowerCase()===n)};
  const multi=o.list.length>1;
  return `<div class="card"><h2>👤 ${multi?'Profili su questo dispositivo':esc(nm(cur))}</h2>`+
   (multi?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${out(r)?'❌ ':''}${esc(nm(r))}</button>`).join('')}</div>`:`<p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>`)+
-  `<button class="link" data-a="padd">➕ Aggiungi un altro profilo (altro nome e PIN)</button></div>`}
+  (closedReg()?`<p class="mu" style="margin:6px 0 0">🔒 Partita iniziata: non si possono più aggiungere profili.</p>`:`<button class="link" data-a="padd">➕ Aggiungi un altro profilo (altro nome e PIN)</button>`)+`</div>`}
 function resetProf(){regSt='';bindCode=null;bindMsg='';draft.team='';msgs=[];msgFor='';msgText='';msgNote='';fbmsg='';okmsg=''}
 
 /* 3 · puntata */
@@ -201,7 +202,7 @@ function betScreen(){
  return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+profBar()
  +(elim?`<div class="card no"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
- +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi il PIN: tocca il pulsante e accedi con nome e PIN.<br>Se lo hai dimenticato: chiedi all’organizzatore di resettare il tuo PIN, poi tocca il pulsante e scegli «Prima registrazione» con un nuovo PIN.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`:'')
+ +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6&&bindCode!==7?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi il PIN: tocca il pulsante e accedi con nome e PIN.<br>Se lo hai dimenticato: chiedi all’organizzatore di resettare il tuo PIN, poi tocca il pulsante e scegli «Prima registrazione» con un nuovo PIN.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e PIN</button>':''}</div>`:'')
  +`<div class="card" style="${can?'':'opacity:.6'}"><h2>La tua puntata — ${esc(S.name)}</h2>${rnBox()}${cdBox()}
   <div class="step" style="margin-top:4px">👤 ${esc(nm)}</div>
   ${can&&(regSt==='no'||regSt==='err')?'<p class="mu" style="margin:2px 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
@@ -234,6 +235,7 @@ async function fbReg(n){if(!ready())return 4;const u=fbBase()+'/players/'+S.id+'
  try{const x=await fetch(u);if(x.ok){const d=await x.json();if(d&&d.k&&d.k!==pkey(n))return 1}
   const y=await fetch(u,{method:'PUT',body:JSON.stringify({n:n,k:pkey(n),ts:{'.sv':'timestamp'}})});return y.ok?0:2}catch(e){return 3}}
 async function bindGame(force){const r=idGet();if(!r||!ready())return 4;if(!force&&r.s&&r.s[S.id])return 0;if(binding)return -1;
+ if(closedReg()&&!r.login&&!(r.s&&r.s[S.id])){if(bindCode!==7){bindCode=7;bindMsg='🔒 Iscrizioni chiuse: la partita è già iniziata, non puoi più entrare con un nuovo profilo. Scrivi all’organizzatore se serve.';regSt='err';render()}return 7}
  binding=true;bindMsg='';bindCode=null;const gid=S.id;let c=0;
  try{if(r.pin)setPkey(r.n,await derK(r.n,r.pin));
   if(r.login&&!(r.s&&r.s[gid])){const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)c=3;else{const d=await x.json();if(!d||!d.k)c=6}}
@@ -246,7 +248,7 @@ async function bindGame(force){const r=idGet();if(!r||!ready())return 4;if(!forc
  bindCode=c;render();return c}
 /* Controlla che l'admin abbia ancora il nome (e recepisce un'eventuale rinomina) */
 async function fbNm(){const r0=idGet();if(!r0||!ready())return;
- if(!(r0.s&&r0.s[S.id])){if(bindCode!==1&&bindCode!==6)await bindGame();return}
+ if(!(r0.s&&r0.s[S.id])){if(bindCode!==1&&bindCode!==6&&bindCode!==7)await bindGame();return}
  const r=regRec(),gid=S.id;try{const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok){setRs('err');return}if((idGet()||{}).rid!==r.rid)return;const d=await x.json(),n=d&&cleanN(d.n);if(d===null){setRs('no');return}setRs('ok');
   if(n&&n!==r.n){const o=uall(),a=S.name.toLowerCase()+'|'+r.n.toLowerCase(),c=S.name.toLowerCase()+'|'+n.toLowerCase();if(o[a]){o[c]=o[a];delete o[a];usave(o)}idMark(q=>{q.gn=q.gn||{};q.gn[gid]=n},r.rid);render()}}catch(e){}}
 function setRs(v){if(regSt!==v){regSt=v;render()}}
@@ -312,7 +314,7 @@ document.addEventListener('click',async e=>{
   else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}
   if(ok)gotIn();else{dt.ot=true;render()}return}
  if(a==='sp'){const o=idsGet();if(o.list.some(x=>x.rid===b.dataset.rid)&&o.cur!==b.dataset.rid){o.cur=b.dataset.rid;idsPut(o);resetProf();regAdding=false;render();poll()}return}
- if(a==='padd'){regAdding=true;regMode='new';regMsg='';regDraft='';regPin='';render();return}
+ if(a==='padd'){if(closedReg()){toast('Partita iniziata: non si possono più aggiungere profili');render();return}regAdding=true;regMode='new';regMsg='';regDraft='';regPin='';render();return}
  if(a==='addcancel'){regAdding=false;regMsg='';regPin='';render();return}
  if(a==='idreset'||a==='prm'){const r=idGet();if(!r)return;
   const q=a==='prm'?'Rimuovere il profilo «'+r.n+'» da questo dispositivo? Per riaverlo ti serviranno nome e PIN.':'Vuoi cancellare il profilo «'+r.n+'» da questo dispositivo e rifare l’accesso con nome e PIN?';
