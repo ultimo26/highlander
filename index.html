@@ -38,6 +38,21 @@ button:disabled{opacity:.5;cursor:default}
 .mg.p{border-color:var(--bd)}
 .mg{border:1px solid var(--ac);border-radius:10px;padding:8px;margin:6px 0}
 summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
+
+/* guida passo-passo */
+#hl{display:none}#hl.on{display:block}
+.hl-spot{position:fixed;z-index:150;pointer-events:none;border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55);transition:left .25s,top .25s,width .25s,height .25s}
+.hl-spot::before,.hl-spot::after{content:"";position:absolute;inset:-4px;border:3px solid var(--ac);border-radius:16px;animation:hlp 1.5s ease-out infinite}
+.hl-spot::after{animation-delay:.75s}
+@keyframes hlp{0%{transform:scale(1);opacity:.95}100%{transform:scale(1.22);opacity:0}}
+.hl-tip{position:fixed;left:10px;right:10px;max-width:480px;margin:0 auto;z-index:160;background:var(--card);color:var(--tx);border:2px solid var(--ac);border-radius:14px;padding:12px 14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.hl-tip .hl-n{font-size:12px;color:var(--mu);margin-bottom:4px}
+.hl-tip .hl-t{font-size:16px;line-height:1.4}
+.hl-tip .hl-b{display:flex;gap:8px;margin-top:10px}
+.hl-tip .hl-b button{flex:1;margin:0;padding:10px 6px}
+.hlnew{animation:hln 1.6s ease-out infinite;border-radius:12px}
+@keyframes hln{0%{box-shadow:0 0 0 0 var(--ac)}100%{box-shadow:0 0 0 14px transparent}}
+@media (prefers-reduced-motion:reduce){.hl-spot::before,.hl-spot::after,.hlnew{animation:none}.hl-spot::after{display:none}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -60,6 +75,63 @@ const DEFRULES="HIGHLANDER FRIENDS\n1.\tQuota d’iscrizione 10€ a partecipant
 
 /* ================= utilità ================= */
 const $=document.getElementById('app');
+/* ================= guida passo-passo =================
+   Un cerchio pulsante indica cosa toccare; se cambi schermata la guida riparte da sola con i passi di quella nuova. */
+const GSTEPS={
+ reg:[['#rn','👤 <b>1 · Scrivi il tuo nome.</b> Resta lo stesso per tutta la partita.'],
+  ['#rp','🔢 <b>2 · Scegli un PIN</b> di 4–6 cifre e ricordalo: ti serve per ritrovare il nome da un altro telefono.'],
+  ['[data-a="reg"]','👆 <b>3 · Tocca «Registrati».</b> Sulla schermata dopo la guida riparte da sola.'],
+  ['[data-a="rmode"]','📱 Ti sei già registrato su un altro dispositivo? Tocca qui e rientra con nome e PIN.']],
+ login:[['#rn','👤 <b>1 · Scrivi il nome</b> con cui ti sei registrato.'],
+  ['#rp','🔢 <b>2 · Scrivi il tuo PIN.</b>'],
+  ['[data-a="rlog"]','👆 <b>3 · Tocca «Ritrova il mio nome».</b>'],
+  ['[data-a="rmode"]','🆕 Prima volta? Torna a «Prima registrazione».']],
+ gate:[['#jcd','🔑 <b>1 · Scrivi il codice partita</b> di 6 caratteri che ti manda l’organizzatore (es. K7P4QX).'],
+  ['[data-a="joinc"]','👆 <b>2 · Tocca «Entra nella partita».</b> Poi potrai scegliere la squadra.'],
+  ['[data-a="padd"]','➕ Giochi con più profili? Puoi aggiungerli qui, ma solo prima che la partita inizi.'],
+  ['details[data-d="rg"]','📜 Qui trovi il regolamento.']],
+ bet:[['.teams','⚽ <b>1 · Scegli la squadra</b> su cui punti. Quelle sbarrate le hai già usate e non puoi riusarle.'],
+  ['[data-a="fbsend"]','📲 <b>2 · Tocca «Invia la puntata».</b> Finché il turno è aperto puoi cambiarla.'],
+  ['details[data-d="us"]','🗂 Qui vedi le squadre già usate.'],
+  ['#mt','💬 Qui scrivi all’organizzatore e leggi le sue risposte.'],
+  ['[data-a="padd"]','➕ Giochi con più profili? Aggiungili qui, solo prima che la partita inizi.'],
+  ['details[data-d="ot"]','⚙️ In «Altro» cambi partita se hai un nuovo codice.']]};
+let hlG=null,hlTimer=0,hlEl=null;
+const hlQ=s=>document.querySelector(s);
+const hlKey=()=>hlQ('.teams')?'bet':hlQ('[data-a="reg"]')?'reg':hlQ('[data-a="rlog"]')?'login':hlQ('[data-a="joinc"]')?'gate':'';
+const hlSeen=()=>{try{return !!localStorage.getItem('hlguide')}catch(e){return true}};
+const guideBar=()=>`<div style="text-align:center;margin:0 0 8px"><button class="link${hlSeen()?'':' hlnew'}" data-guide="1">🧭 Guida: ti mostro cosa premere</button></div>`;
+function hlBuild(){if(hlEl)return;hlEl=document.createElement('div');hlEl.id='hl';
+ hlEl.innerHTML='<div class="hl-spot" style="display:none"></div><div class="hl-tip" role="dialog" aria-live="polite"><div class="hl-n"></div><div class="hl-t"></div><div class="hl-b"><button data-hl="prev">← Indietro</button><button class="sel" data-hl="next">Avanti →</button><button data-hl="x">✕ Chiudi</button></div></div>';
+ document.body.appendChild(hlEl)}
+function hlSteps(k){return (GSTEPS[k]||[]).filter(x=>hlQ(x[0]))}
+function hlStart(){const k=hlKey();if(!k)return;try{localStorage.setItem('hlguide','1')}catch(e){}
+ hlBuild();hlG={k,steps:hlSteps(k),i:0,scroll:true};if(!hlG.steps.length){hlG=null;return}
+ hlEl.classList.add('on');clearInterval(hlTimer);hlTimer=setInterval(hlTick,250);hlTick();
+ document.querySelectorAll('.hlnew').forEach(b=>b.classList.remove('hlnew'))}
+function hlStop(){hlG=null;clearInterval(hlTimer);if(hlEl)hlEl.classList.remove('on')}
+function hlGo(d){if(!hlG)return;const n=hlG.i+d;if(n<0)return;if(n>=hlG.steps.length){hlStop();return}hlG.i=n;hlG.scroll=true;hlTick()}
+function hlTick(){if(!hlG)return;const k=hlKey();
+ if(k!==hlG.k){if(!k){hlEl.querySelector('.hl-spot').style.display='none';return}hlG={k,steps:hlSteps(k),i:0,scroll:true};if(!hlG.steps.length){hlStop();return}}
+ const st=hlG.steps[hlG.i],el=hlQ(st[0]),sp=hlEl.querySelector('.hl-spot'),tip=hlEl.querySelector('.hl-tip'),last=hlG.i===hlG.steps.length-1;
+ tip.querySelector('.hl-n').textContent='Passo '+(hlG.i+1)+' di '+hlG.steps.length;
+ tip.querySelector('.hl-t').innerHTML=st[1];
+ tip.querySelector('[data-hl="prev"]').style.display=hlG.i?'':'none';
+ tip.querySelector('[data-hl="next"]').textContent=last?'Fine ✓':'Avanti →';
+ if(!el){sp.style.display='none';tip.style.top='';tip.style.bottom='14px';return}
+ if(hlG.scroll){hlG.scroll=false;try{el.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){el.scrollIntoView()}}
+ const r=el.getBoundingClientRect();
+ if(!r.width||!r.height){sp.style.display='none';return}
+ const pd=6;sp.style.display='block';sp.style.left=(r.left-pd)+'px';sp.style.top=(r.top-pd)+'px';sp.style.width=(r.width+pd*2)+'px';sp.style.height=(r.height+pd*2)+'px';
+ const low=(r.top+r.bottom)/2>innerHeight*0.5;
+ if(low){tip.style.bottom='';tip.style.top='calc(10px + env(safe-area-inset-top,0px))'}else{tip.style.top='';tip.style.bottom='calc(14px + env(safe-area-inset-bottom,0px))'}}
+document.addEventListener('click',e=>{const t=e.target;if(!t||!t.closest)return;
+ if(t.closest('[data-guide]')){e.preventDefault();hlStart();return}
+ const b=t.closest('[data-hl]');if(!b)return;const a=b.dataset.hl;
+ if(a==='x')hlStop();else if(a==='next')hlGo(1);else if(a==='prev')hlGo(-1)},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&hlG)hlStop()});
+addEventListener('resize',()=>{if(hlG)hlTick()});
+
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cleanN=v=>String(v||'').replace(/[\[\]\n\r]/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
 const pidOf=n=>String(n).trim().toLowerCase().replace(/[.$#\[\]\/\s]+/g,'_').slice(0,40)||'_';
@@ -220,7 +292,7 @@ function view(){
  return betScreen()}
 function render(){
  const a=document.activeElement;if(a&&['INPUT','TEXTAREA'].includes(a.tagName))return;
- $.innerHTML=(LS?'':'<div class="card"><b>⚠️ Dati non salvabili</b><p class="mu">Questo browser non permette di salvare i dati. Apri la pagina con Chrome o Safari (non dall’anteprima di WhatsApp).</p></div>')+view()}
+ $.innerHTML=guideBar()+(LS?'':'<div class="card"><b>⚠️ Dati non salvabili</b><p class="mu">Questo browser non permette di salvare i dati. Apri la pagina con Chrome o Safari (non dall’anteprima di WhatsApp).</p></div>')+view()}
 
 /* ================= rete ================= */
 /* Registro globale dei nomi: blocca i doppioni e permette di ritrovare il nome da un altro dispositivo PRIMA di avere il codice partita.
