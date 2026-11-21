@@ -173,7 +173,7 @@ const shortCode=v=>{const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,
 let G=null,S=null;                       // G = dati partita salvati, S = partita corrente
 let stD=null,stFor='',rsClosed=false,rsFor='',bc=[];
 let msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='',regAdding=false;
-let regMode='new',regDraft='',regPin='',regEmail='',wantMsg='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
+let regShow=false,regMode='new',regDraft='',regPin='',regEmail='',wantMsg='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
 const save=()=>{if(G)lset('uipj',JSON.stringify(G))};
 function norm(){
  if(!G||!Array.isArray(G.games)||!G.games.length){G=null;S=null;return}
@@ -253,9 +253,9 @@ function regScreen(){const m=regMode,lg=m==='login',rc=m==='rec',add=!!idGet();
  const intro=rc?`<p class="mu">Scrivi il nome, l’<b>email</b> usata in registrazione e scegli una <b>nuova password</b>. Non viene spedita nessuna email: serve a confermare che sei tu.</p>`
   :lg?`<p class="mu">Inserisci il nome e la password con cui ti sei registrato: ritroverai la stessa identità su questo dispositivo.</p>`
   :`<p class="mu">Scegli il <b>nome</b> (resta lo stesso per tutta la partita, solo l’admin può cambiarlo), l’<b>email</b> per recuperare la password e una <b>password</b> di almeno 4 caratteri. Poi tornerai alla pagina principale.</p>`;
- const f=`<input id="rn" maxlength="30" autocomplete="username" placeholder="Il tuo nome" value="${esc(regDraft)}">`
-  +(lg?'':`<input id="re" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="80" placeholder="Email (per recuperare la password)" value="${esc(regEmail)}">`)
-  +`<input id="rp" type="password" autocomplete="${lg?'current-password':'new-password'}" autocapitalize="off" spellcheck="false" maxlength="30" placeholder="${rc?'Nuova password':'Password (almeno 4 caratteri)'}" value="${esc(regPin)}">`;
+ const f=`<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}">`
+  +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="Email (per recuperare la password)" value="${esc(regEmail)}">`)
+  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" maxlength="30" placeholder="${rc?'Nuova password':'Password (almeno 4 caratteri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
  return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password':lg?'Entra':'Crea account'}</button><p class="mu">${esc(regMsg)}</p>`
   +(lg?`<button class="link" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">← Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">Ho già un account (anche su un altro dispositivo)</button>`)
   +(add?'<button class="link" data-a="addcancel">← Annulla</button>':'')+`</div>`}
@@ -421,6 +421,7 @@ document.addEventListener('click',async e=>{
   resetProf();regAdding=false;regPin='';regEmail='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;wantMsg='';lset('uipname',nn);
   okmsg=lg?'✅ Bentornato, '+nn:'✅ Account creato: benvenuto, '+nn+'! Ora invia l’iscrizione all’admin.';setTimeout(()=>{okmsg='';render()},8000);
   render();if(ready()){bindGame();poll()}return}
+ if(a==='rshow'){regShow=!regShow;render();const e=document.getElementById('rp');if(e){e.focus()}return}
  if(a==='rforgot'){regMode='rec';regMsg='';render();return}
  if(a==='rrec'){const el=document.getElementById('rn'),n=cleanN(el&&el.value),em=String(regEmail||'').trim(),pw=String(regPin||'').trim();regDraft=n;
   if(n.length<2){regMsg='Scrivi il nome con cui ti eri registrato.';render();return}
