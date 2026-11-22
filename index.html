@@ -21,6 +21,18 @@ button{cursor:pointer;text-align:center}
 button:disabled{opacity:.5;cursor:default}
 .sel{background:var(--ac);color:var(--on);border-color:var(--ac)}
 .link{background:none;border:0;color:var(--mu);font-size:14px;text-decoration:underline;padding:8px}
+.nb{background:rgba(27,138,75,.10);border:1px solid var(--ac);border-radius:10px;padding:9px 11px;margin:10px 0;font-size:14px;line-height:1.45}
+.nb.w{background:rgba(192,57,43,.10);border-color:var(--bad)}
+.fgt{display:block;width:100%;margin:10px 0 2px;background:none;border:2px solid var(--ac);color:var(--ac);border-radius:10px;padding:11px;font-size:15px;font-weight:700}
+.gx .card{padding:10px 12px;margin:8px 0}
+.gx .chips{margin:4px 0}
+.gh{margin:4px 2px;font-size:15px}
+.gc b{display:block}.gc .mu{display:block;margin:2px 0 6px;font-size:13px}.gc p.mu{margin:4px 0 0}.gc button{margin:2px 0}
+.stp{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0;text-align:center;font-size:11px;line-height:1.2}
+.stp div{border:1px solid var(--bd);border-radius:10px;padding:5px 2px;background:var(--card)}
+.stp span{display:block;font-size:18px;line-height:1.25}.stp .on{border-color:var(--ac);font-weight:700}
+.gr{display:flex;gap:8px}.gr input{flex:1 1 auto;min-width:0;margin:0}.gr button{width:auto;flex:none;padding:11px 18px;margin:0}
+.gl{display:flex;justify-content:space-between;gap:4px}.gl button{width:auto;margin:0}
 .teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .teams button{margin:0;padding:12px 6px;border-left:6px solid var(--c,var(--bd))}
 .teams button.lock{opacity:.55}.teams button.used{text-decoration:line-through;opacity:.5}
@@ -85,23 +97,26 @@ const $=document.getElementById('app');
    Un cerchio pulsante indica cosa toccare; se cambi schermata la guida riparte da sola con i passi di quella nuova. */
 const GSTEPS={
  reg:[['#rn','👤 <b>Tappa 1 · Scrivi il tuo nome.</b> Resta lo stesso per tutta la partita.'],
-  ['#re','✉️ <b>Scrivi la tua email.</b> Non riceverai messaggi: serve solo a recuperare la password se la dimentichi.'],
+  ['#re','✉️ <b>Scrivi la tua email.</b> Non riceverai messaggi: ti serve solo se un giorno dimentichi la password. Scrivila giusta!'],
   ['#rp','🔒 <b>Scegli una password</b> di almeno 4 caratteri e ricordala.'],
+  ['[data-a="rshow"]','👁 Tocca qui per vedere cosa hai scritto e non sbagliare.'],
   ['[data-a="reg"]','👆 <b>Tocca «Crea account».</b> Tornerai alla pagina principale e la guida continuerà da lì.'],
   ['[data-a="rmode"]','📱 Hai già un account (anche su un altro telefono)? Tocca qui per entrare con nome e password.']],
  login:[['#rn','👤 <b>Scrivi il nome</b> con cui ti sei registrato.'],
   ['#rp','🔒 <b>Scrivi la tua password.</b>'],
   ['[data-a="rlog"]','👆 <b>Tocca «Entra».</b>'],
-  ['[data-a="rforgot"]','🔑 Password dimenticata? Tocca qui: ti serve l’email usata in registrazione.'],
+  ['[data-a="rforgot"]','🔑 <b>Password dimenticata?</b> Tocca questo pulsante: ti bastano il nome e l’email usata in registrazione. Non arriva nessuna email, la cambi subito.'],
   ['[data-a="rmode"]','🆕 Prima volta? Crea un nuovo account.']],
- rec:[['#rn','👤 <b>Scrivi il nome</b> con cui ti sei registrato.'],
-  ['#re','✉️ <b>Scrivi l’email</b> usata in registrazione: serve a confermare che sei tu.'],
-  ['#rp','🔒 <b>Scegli una nuova password.</b>'],
-  ['[data-a="rrec"]','👆 <b>Tocca «Cambia password».</b> Poi torni all’accesso.']],
+ rec:[['#recinfo','🔑 <b>La password si cambia qui, in 3 mosse.</b> Non arriva nessuna email: basta scrivere quella usata in registrazione.'],
+  ['#rn','👤 <b>1 · Scrivi il nome</b> con cui ti sei registrato.'],
+  ['#re','✉️ <b>2 · Scrivi l’email</b> usata in registrazione: serve a confermare che sei tu.'],
+  ['#rp','🔒 <b>3 · Scegli una nuova password</b> (almeno 4 caratteri). La vedi scritta, così non sbagli.'],
+  ['[data-a="rrec"]','👆 <b>Tocca «Cambia password ed entra».</b> Poi entri da solo.'],
+  ['[data-a="rmode"]','↩️ Ti sei ricordato la password? Torna all’accesso.']],
  gate:[['#hlpath','📍 Qui vedi a che punto sei: ogni tappa si spunta da sola.'],
   ['[data-a="want"]','📨 <b>Tappa 2 · Tocca «Invia la mia iscrizione».</b> L’admin vede che vuoi giocare e ti aggiunge ai giocatori.'],
   ['#jcd','🔑 <b>Tappa 3 · Quando l’admin ha raccolto tutte le iscrizioni</b> ti manda il codice partita (6 caratteri, es. K7P4QX): scrivilo qui. Sblocca le puntate.'],
-  ['[data-a="joinc"]','👆 Poi tocca <b>«Entra nella partita»</b>.'],
+  ['[data-a="joinc"]','👆 Poi tocca <b>«Entra»</b>.'],
   ['[data-a="padd"]','➕ Giochi con più profili? Aggiungili qui, ma solo prima che la partita inizi.'],
   ['details[data-d="rg"]','📜 Qui trovi il regolamento.']],
  bet:[['.teams','⚽ <b>Tappa 4 · Scegli la squadra</b> su cui punti. Quelle sbarrate le hai già usate e non puoi riusarle.'],
@@ -249,30 +264,34 @@ const dt={};
 
 /* 1 · registrazione */
 function regScreen(){const m=regMode,lg=m==='login',rc=m==='rec',add=!!idGet();
- const hd=rc?'🔑 Recupera la password':lg?'Entra con il tuo account':'📝 Tappa 1 · Crea il tuo account';
- const intro=rc?`<p class="mu">Scrivi il nome, l’<b>email</b> usata in registrazione e scegli una <b>nuova password</b>. Non viene spedita nessuna email: serve a confermare che sei tu.</p>`
-  :lg?`<p class="mu">Inserisci il nome e la password con cui ti sei registrato: ritroverai la stessa identità su questo dispositivo.</p>`
-  :`<p class="mu">Scegli il <b>nome</b> (resta lo stesso per tutta la partita, solo l’admin può cambiarlo), l’<b>email</b> per recuperare la password e una <b>password</b> di almeno 4 caratteri. Poi tornerai alla pagina principale.</p>`;
+ const hd=rc?'🔑 Recupera la password':lg?'👋 Entra con il tuo account':'📝 Tappa 1 · Crea il tuo account';
+ const intro=rc?`<div class="nb" id="recinfo"><b>Hai dimenticato la password? Si cambia qui, in 3 mosse:</b><br>1️⃣ il tuo nome · 2️⃣ l’email usata in registrazione · 3️⃣ la nuova password.<br><span class="mu">Non arriva nessuna email: se l’email è quella giusta la password cambia subito e ti faccio entrare.</span></div>`
+  :lg?`<p class="mu">Scrivi il nome e la password con cui ti sei registrato.</p>`
+  :`<p class="mu">Tre cose e sei dentro: <b>nome</b> (resta lo stesso per tutta la partita), <b>email</b> e <b>password</b> (almeno 4 caratteri).</p><div class="nb">✉️ <b>Non riceverai nessuna email.</b> L’email serve solo se un giorno dimentichi la password: ti basterà riscriverla per sceglierne una nuova. Scrivila giusta e ricordala.</div>`;
  const f=`<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}">`
-  +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="Email (per recuperare la password)" value="${esc(regEmail)}">`)
-  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" maxlength="30" placeholder="${rc?'Nuova password':'Password (almeno 4 caratteri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
- return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password':lg?'Entra':'Crea account'}</button><p class="mu">${esc(regMsg)}</p>`
-  +(lg?`<button class="link" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">← Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">Ho già un account (anche su un altro dispositivo)</button>`)
+  +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="${rc?'Email usata in registrazione':'Email (ti serve se dimentichi la password)'}" value="${esc(regEmail)}">`)
+  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" maxlength="30" placeholder="${rc?'Nuova password (almeno 4 caratteri)':'Password (almeno 4 caratteri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
+ return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^❌/.test(regMsg)?' w':''}">${esc(regMsg)}</div>`:''}`
+  +(lg?`<button class="fgt" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">🆕 Prima volta? Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">📱 Ho già un account (anche su un altro dispositivo)</button>`)
   +(add?'<button class="link" data-a="addcancel">← Annulla</button>':'')+`</div>`}
 
 /* 2 · codice partita */
 const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
 const pathCard=()=>{const r=idGet(),w=!!(r&&r.w);
- return `<div class="card" id="hlpath"><h2>📍 Il tuo percorso</h2>`+[['✅','Tappa 1 · Account creato'],[w?'✅':'👉','Tappa 2 · Invia l’iscrizione all’admin'],[w?'👉':'⏳','Tappa 3 · Aspetta il codice partita e inseriscilo'],['⏳','Tappa 4 · Scegli la squadra e invia la puntata']].map(x=>`<div class="row"><span>${x[0]} ${x[1]}</span></div>`).join('')+`</div>`};
+ const st=[['✅','Account'],[w?'✅':'👉','Iscrizione'],[w?'👉':'⏳','Codice'],['⏳','Puntata']];
+ return `<div class="stp" id="hlpath">${st.map((x,i)=>`<div class="${x[0]==='👉'?'on':''}"><span>${x[0]}</span>${i+1} · ${x[1]}</div>`).join('')}</div>`};
+const gProf=()=>{const o=idsGet(),cur=idGet();if(!cur)return '';const nm=r=>(r.gn&&S&&S.id&&r.gn[S.id])||r.n;
+ return o.list.length>1?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${esc(nm(r))}</button>`).join('')}</div>`:`<div class="gh">👤 <b>${esc(nm(cur))}</b></div>`};
 const wantCard=()=>{const r=idGet();if(!r)return '';
- return r.w?`<div class="card ok"><h2>✅ Tappa 2 · Iscrizione inviata</h2><p class="mu" style="margin:0 0 6px">Inviata il ${new Date(r.w).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}. Ora aspetta che l’admin raccolga tutte le iscrizioni e ti mandi il codice partita.</p><button class="link" data-a="want">Reinvia l’iscrizione</button><p class="mu">${esc(wantMsg)}</p></div>`
- :`<div class="card"><h2>📨 Tappa 2 · Vuoi giocare?</h2><p class="mu">Invia la tua iscrizione all’admin: vedrà il tuo nome tra i giocatori. Quando le avrà raccolte tutte ti manda il codice partita.</p><button class="sel" data-a="want">📨 Invia la mia iscrizione all’admin</button><p class="mu">${esc(wantMsg)}</p></div>`};
+ return r.w?`<div class="card gc ok"><b>✅ Tappa 2 · Iscrizione inviata</b><span class="mu">Il ${new Date(r.w).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}. Ora aspetta il codice dell’admin.</span><button class="link" data-a="want">Reinvia l’iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`
+ :`<div class="card gc"><b>📨 Tappa 2 · Vuoi giocare?</b><span class="mu">L’admin vedrà il tuo nome tra i giocatori.</span><button class="sel" data-a="want">📨 Invia la mia iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`};
 function gateScreen(){const r=idGet();
- const off=G&&S&&!ready()?`<div class="card" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><p class="mu" style="margin:4px 0 0">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</p></div>`:'';
- return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+
- profBar()+pathCard()+wantCard()+off+
- `<div class="card"><h2>🔑 Tappa 3 · Inserisci il codice partita</h2><p class="mu">Quando l’admin ha raccolto tutte le iscrizioni ti manda il <b>codice partita</b> di 6 caratteri (es. K7P4QX). Scrivilo qui per sbloccare le puntate.</p>${codeForm('Entra nella partita')}</div>`+
- rulesBox()+exitBox()}
+ const off=G&&S&&!ready()?`<div class="card gc" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><span class="mu">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</span></div>`:'';
+ return `<div class="gx">`+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
+ gProf()+pathCard()+wantCard()+off+
+ `<div class="card gc"><b>🔑 Tappa 3 · Codice partita</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita"><button class="sel" data-a="joinc">Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
+ rulesBox()+
+ `<div class="gl">${closedReg()?'':'<button class="link" data-a="padd">➕ Altro profilo</button>'}<button class="link" data-a="prm">🚪 Rimuovi profilo</button></div></div>`}
 
 /* barra profili */
 const closedReg=()=>!!(stD&&S&&stFor===S.id&&stD.rc>0);
@@ -413,24 +432,24 @@ document.addEventListener('click',async e=>{
   if(pin.length<4||pin.length>30){regMsg=lg?'Inserisci la tua password.':'Scegli una password di almeno 4 caratteri.';render();return}
   regMsg=lg?'Controllo…':'Registrazione in corso…';render();
   const q=await gReg(n,pin,!lg,em),c=q.c;
-  if(c===1){regMsg=lg?'❌ Password errata. Se l’hai dimenticata tocca «Password dimenticata?» (serve l’email) oppure chiedi all’organizzatore di resettarla.':'❌ Nome già usato da un altro giocatore. Se sei tu, tocca «Ho già un account» e inserisci la tua password; altrimenti aggiungi cognome o iniziale.';render();return}
+  if(c===1){regMsg=lg?'❌ La password non è giusta. Riprova, oppure tocca il pulsante «🔑 Password dimenticata?» qui sotto: ti serve solo l’email usata in registrazione.':'❌ Nome già usato da un altro giocatore. Se sei tu, tocca «Ho già un account» e inserisci la tua password; altrimenti aggiungi cognome o iniziale.';render();return}
   if(c===3){regMsg='❌ Nessuna connessione: riprova.';render();return}
-  if(c===6){regMsg='❌ Nessun giocatore con questo nome: controlla come l’hai scritto. Se non ti sei mai registrato, tocca «Crea un nuovo account». Se l’organizzatore ha resettato la tua password, crea l’account con lo stesso nome e una nuova password.';render();return}
+  if(c===6){regMsg='❌ Non trovo nessun account con questo nome. Controlla come l’hai scritto. Se non ti sei mai registrato, tocca «Prima volta? Crea un nuovo account». Se l’organizzatore ha resettato la tua password, crea di nuovo l’account con lo stesso nome.';render();return}
   const nn=q.n||n;
   idPut({n:nn,rid:pidOf(nn),pin,s:{},gn:{},w:q.w||undefined,login:(lg&&c===5)?1:undefined});
   resetProf();regAdding=false;regPin='';regEmail='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;wantMsg='';lset('uipname',nn);
   okmsg=lg?'✅ Bentornato, '+nn:'✅ Account creato: benvenuto, '+nn+'! Ora invia l’iscrizione all’admin.';setTimeout(()=>{okmsg='';render()},8000);
   render();if(ready()){bindGame();poll()}return}
  if(a==='rshow'){regShow=!regShow;render();const e=document.getElementById('rp');if(e){e.focus()}return}
- if(a==='rforgot'){regMode='rec';regMsg='';render();return}
+ if(a==='rforgot'){regMode='rec';regMsg='';regPin='';regShow=true;render();return}
  if(a==='rrec'){const el=document.getElementById('rn'),n=cleanN(el&&el.value),em=String(regEmail||'').trim(),pw=String(regPin||'').trim();regDraft=n;
   if(n.length<2){regMsg='Scrivi il nome con cui ti eri registrato.';render();return}
   if(!EMRE.test(em)){regMsg='Scrivi l’email usata in registrazione.';render();return}
   if(pw.length<4||pw.length>30){regMsg='Scegli una nuova password di almeno 4 caratteri.';render();return}
   regMsg='Controllo…';render();
   const q=await gRecover(n,em,pw),c=q.c;
-  if(c===0){regMode='login';regEmail='';regMsg='✅ Password cambiata. Ora tocca «Entra».';render();return}
-  regMsg={3:'❌ Nessuna connessione: riprova.',5:'❌ Il database non risponde o non permette la modifica: riprova o chiedi all’organizzatore.',6:'❌ Nessun account con questo nome: controlla come l’hai scritto.',7:'Questo account è stato creato senza email: chiedi all’organizzatore di resettare la password.',8:'❌ L’email non corrisponde a quella usata in registrazione.'}[c]||'❌ Recupero non riuscito: chiedi all’organizzatore.';render();return}
+  if(c===0){regMode='login';regEmail='';regMsg='✅ Password cambiata! Ti faccio entrare…';render();setTimeout(()=>{if(regMode==='login'&&/^✅/.test(regMsg)){const bt=document.querySelector('[data-a="rlog"]');if(bt)bt.click()}},700);return}
+  regMsg={3:'❌ Nessuna connessione: riprova.',5:'❌ Non riesco a salvare la nuova password (database non raggiungibile). Riprova tra poco; se continua, chiedi all’organizzatore di resettarla.',6:'❌ Non trovo nessun account con questo nome. Controlla come l’hai scritto.',7:'ℹ️ Questo account è stato creato senza email, quindi non si può recuperare da qui. Scrivi all’organizzatore: ti resetta la password e crei di nuovo l’account con lo stesso nome.',8:'❌ L’email non è quella usata in registrazione. Controlla di non aver sbagliato qualche lettera e riprova.'}[c]||'❌ Recupero non riuscito: riprova o chiedi all’organizzatore.';render();return}
  if(a==='want'){const r=idGet();if(!r)return;wantMsg='Invio in corso…';render();
   try{const x=await fetch((fbBase()||FB_DEFAULT)+'/registry/'+encodeURIComponent(r.rid)+'/want.json',{method:'PUT',body:JSON.stringify({'.sv':'timestamp'})});
    if(x.ok){idMark(o=>{o.w=Date.now()},r.rid);wantMsg=''}else wantMsg='❌ Il database ha rifiutato l’invio: avvisa l’organizzatore.'}catch(e){wantMsg='❌ Nessuna connessione: riprova.'}
