@@ -98,7 +98,7 @@ const $=document.getElementById('app');
 const GSTEPS={
  reg:[['#rn','👤 <b>Tappa 1 · Scrivi il tuo nome.</b> Resta lo stesso per tutta la partita.'],
   ['#re','✉️ <b>Scrivi la tua email.</b> Non riceverai messaggi: ti serve solo se un giorno dimentichi la password. Scrivila giusta!'],
-  ['#rp','🔒 <b>Scegli una password</b> di almeno 4 caratteri e ricordala.'],
+  ['#rp','🔒 <b>Scegli una password di 6 numeri</b> (per esempio 482916) e ricordala.'],
   ['[data-a="rshow"]','👁 Tocca qui per vedere cosa hai scritto e non sbagliare.'],
   ['[data-a="reg"]','👆 <b>Tocca «Crea account».</b> Tornerai alla pagina principale e la guida continuerà da lì.'],
   ['[data-a="rmode"]','📱 Hai già un account (anche su un altro telefono)? Tocca qui per entrare con nome e password.']],
@@ -110,7 +110,7 @@ const GSTEPS={
  rec:[['#recinfo','🔑 <b>La password si cambia qui, in 3 mosse.</b> Non arriva nessuna email: basta scrivere quella usata in registrazione.'],
   ['#rn','👤 <b>1 · Scrivi il nome</b> con cui ti sei registrato.'],
   ['#re','✉️ <b>2 · Scrivi l’email</b> usata in registrazione: serve a confermare che sei tu.'],
-  ['#rp','🔒 <b>3 · Scegli una nuova password</b> (almeno 4 caratteri). La vedi scritta, così non sbagli.'],
+  ['#rp','🔒 <b>3 · Scegli una nuova password</b> (6 numeri). La vedi scritta, così non sbagli.'],
   ['[data-a="rrec"]','👆 <b>Tocca «Cambia password ed entra».</b> Poi entri da solo.'],
   ['[data-a="rmode"]','↩️ Ti sei ricordato la password? Torna all’accesso.']],
  gate:[['#hlpath','📍 Qui vedi a che punto sei: ogni tappa si spunta da sola.'],
@@ -255,8 +255,10 @@ function cdInfo(){const t=dlMs(),d=S&&S.cfg.deadline;if(t===null)return{ph:'none
  const last=left<=3600000;return{ph:last?'last':'open',html:(last?'⚠️ Ultima ora per puntare!':'⏰ Mancano')+'<b>'+fmt(left)+'</b><span>Scadenza: '+esc(when)+'</span>'}}
 const cdBox=()=>{const i=cdInfo();curPh=i.ph;return i.html?`<div class="cd ${i.ph}" id="cd">${i.html}</div>`:''};
 /* 't' = tempo scaduto · 'a' = turno chiuso dall'admin · 'n' = nessun turno aperto */
-function lockKind(){if(cdInfo().ph==='closed')return 't';if(ready()&&rsFor===S.id&&rsClosed)return 'a';if(stD&&stFor===S.id&&stD.rn===0)return 'n';return ''}
-const lockText=k=>k==='t'?'⏰ Tempo scaduto: non puoi più cambiare squadra.':k==='n'?'⏳ Nessun turno aperto: aspetta che l’organizzatore inizi il prossimo.':'🔒 Turno chiuso: non puoi più cambiare squadra. Aspetta il prossimo turno.';
+const finOf=d=>!!(d&&(d.fin===1||(d.rn===0&&d.rc>0&&Array.isArray(d.alive)&&d.alive.length<=1)));
+const isFin=()=>!!(S&&stD&&stFor===S.id&&finOf(stD));
+function lockKind(){if(isFin())return 'f';if(cdInfo().ph==='closed')return 't';if(ready()&&rsFor===S.id&&rsClosed)return 'a';if(stD&&stFor===S.id&&stD.rn===0)return 'n';return ''}
+const lockText=k=>k==='f'?'🏁 Partita conclusa: non si può più puntare.':k==='t'?'⏰ Tempo scaduto: non puoi più cambiare squadra.':k==='n'?'⏳ Nessun turno aperto: aspetta che l’organizzatore inizi il prossimo.':'🔒 Turno chiuso: non puoi più cambiare squadra. Aspetta il prossimo turno.';
 const isOut=()=>{const n=me().trim().toLowerCase();return !!n&&!!stD&&stFor===S.id&&Array.isArray(stD.out)&&stD.out.some(x=>String(x).trim().toLowerCase()===n)};
 const outWhy=()=>{const n=me().trim().toLowerCase();if(!stD||!Array.isArray(stD.out))return '';const i=stD.out.findIndex(x=>String(x).trim().toLowerCase()===n);return i>=0&&stD.why&&stD.why[i]?String(stD.why[i]):''};
 
@@ -269,11 +271,11 @@ function regScreen(){const m=regMode,lg=m==='login',rc=m==='rec',add=!!idGet();
  const hd=rc?'🔑 Recupera la password':lg?'👋 Entra con il tuo account':'📝 Tappa 1 · Crea il tuo account';
  const intro=rc?`<div class="nb" id="recinfo"><b>Hai dimenticato la password? Si cambia qui, in 3 mosse:</b><br>1️⃣ il tuo nome · 2️⃣ l’email usata in registrazione · 3️⃣ la nuova password.<br><span class="mu">Non arriva nessuna email: se l’email è quella giusta la password cambia subito e ti faccio entrare.</span></div>`
   :lg?`<p class="mu">Scrivi il nome e la password con cui ti sei registrato.</p>`
-  :`<p class="mu">Tre cose e sei dentro: <b>nome</b> (resta lo stesso per tutta la partita), <b>email</b> e <b>password</b> (almeno 4 caratteri).</p><div class="nb">✉️ <b>Non riceverai nessuna email.</b> L’email serve solo se un giorno dimentichi la password: ti basterà riscriverla per sceglierne una nuova. Scrivila giusta e ricordala.</div>`;
+  :`<p class="mu">Tre cose e sei dentro: <b>nome</b> (resta lo stesso per tutta la partita), <b>email</b> e <b>password</b> (6 numeri).</p><div class="nb">✉️ <b>Non riceverai nessuna email.</b> L’email serve solo se un giorno dimentichi la password: ti basterà riscriverla per sceglierne una nuova. Scrivila giusta e ricordala.</div>`;
  const f=`<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}">`
   +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="${rc?'Email usata in registrazione':'Email (ti serve se dimentichi la password)'}" value="${esc(regEmail)}">`)
-  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" maxlength="30" placeholder="${rc?'Nuova password (almeno 4 caratteri)':'Password (almeno 4 caratteri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
- return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^❌/.test(regMsg)?' w':''}">${esc(regMsg)}</div>`:''}`
+  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" inputmode="numeric" pattern="[0-9]*" maxlength="${lg?30:6}" placeholder="${rc?'Nuova password (6 numeri)':lg?'Password':'Password (6 numeri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
+ return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^(✅|Controllo)/.test(regMsg)?'':' w'}">${esc(regMsg)}</div>`:''}`
   +(lg?`<button class="fgt" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">🆕 Prima volta? Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">📱 Ho già un account (anche su un altro dispositivo)</button>`)
   +(add?'<button class="link" data-a="addcancel">← Annulla</button>':'')+`</div>`}
 
@@ -313,9 +315,11 @@ function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?
 function msgBox(){const r=regRec();if(!r||!isBound())return '';const vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
  const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'':'p'}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')+'<button data-a="hma">🗑 Cancella tutti i messaggi</button>':'<p class="mu">Nessun messaggio.</p>';
  return `<div class="card"><h2>💬 Messaggi con l’admin</h2>${th}<textarea id="mt" maxlength="300" placeholder="Scrivi un messaggio all’admin">${esc(msgText)}</textarea><button class="sel" data-a="msend" ${msgBusy?'disabled':''}>Invia messaggio</button><p class="mu">${esc(msgNote)}</p></div>`}
-function rnBox(){if(!stD||stFor!==S.id)return '';
+function rnBox(){if(!stD||stFor!==S.id||isFin())return '';
  if(stD.rn>0)return `<div style="font-weight:700;font-size:18px;margin:2px 0 6px">🔢 Turno ${stD.rn}${stD.rs===0?' <span class="mu" style="font-weight:400">(non ancora iniziato)</span>':''}</div>`;
  if(stD.rc>0)return `<div style="margin:2px 0 6px"><b>🔢 Turno ${stD.rc} concluso</b><div class="mu">Aspetta che l’organizzatore apra il prossimo turno.</div></div>`;return ''}
+function finBox(){if(!isFin())return '';const w=Array.isArray(stD.alive)?stD.alive:[],n=me().trim().toLowerCase(),won=w.some(x=>String(x).trim().toLowerCase()===n);
+ return `<div class="card ok" style="text-align:center"><div style="font-size:44px;line-height:1">🏆</div><h2 style="margin:6px 0">Partita conclusa</h2>${w.length?`<p style="margin:4px 0;font-weight:700">${w.length===1?'Vincitore':'Vincitori'}: ${w.map(x=>esc(String(x))).join(', ')}</p>`:'<p class="mu" style="margin:4px 0">Nessun vincitore: sono stati eliminati tutti.</p>'}${won?'<p style="margin:4px 0">🎉 <b>Complimenti, hai vinto!</b></p>':''}<p class="mu" style="margin:4px 0">Le puntate sono chiuse e il codice non vale più per nuovi ingressi.</p></div>`}
 function betScreen(){
  const can=isBound(),u=urec(),us=allUsed(u),usN=new Set(us.map(normT)),srvN=new Set(srvUsed().map(normT)),pt=u.pend&&u.pend.t,elim=isOut(),lk=lockKind(),T=teams(),nm=me();
  if(usN.has(normT(draft.team))||elim||!can)draft.team='';
@@ -324,6 +328,7 @@ function betScreen(){
   :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':lk?lockText(lk):!can?'⏳ Attendi la conferma del tuo nome.':'Scegli una squadra.'}</p>`;
  const used=us.length||u.pend?det('us','🗂 Le mie squadre già usate ('+us.length+')',(us.map(t=>`<div class="row"><span>${esc(t)}</span>${srvN.has(normT(t))?'<span class="mu" title="Confermata dall’admin">🔒</span>':`<button class="inl" data-a="rmu" data-t="${esc(t)}" aria-label="Rimuovi ${esc(t)}">✕</button>`}</div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+(u.pend?`<p class="mu">⏳ In corso: <b>${esc(u.pend.t)}</b> (diventa usata a turno chiuso)</p>`:'')+'<p class="mu">Se una squadra è segnata per errore, tocca ✕.</p>'):'';
  return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+profBar()
+ +finBox()
  +(elim?`<div class="card no"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
  +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6&&bindCode!==7?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi la password: tocca il pulsante e accedi con nome e password.<br>Se l’hai dimenticata: nella schermata di accesso tocca «Password dimenticata?» (serve l’email), oppure chiedi all’organizzatore di resettarla.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e password</button>':''}</div>`:'')
@@ -413,6 +418,7 @@ async function fbSend(){
 function poll(){fbSt();fbRS();fbNm();fbBc();fbMsgs()}
 
 /* ================= ingresso in partita ================= */
+async function codeEnded(v){try{const t=codeOf(v),j=t&&dec(t);if(!j||!j.games||!j.games.length)return false;const g=j.games[j.games.length-1],fb=String(j.fb||FB_DEFAULT).trim().replace(/\/+$/,'');if(!g||!g.id||!FBRE.test(fb))return false;const x=await fetch(fb+'/status/'+encodeURIComponent(g.id)+'.json');if(!x.ok)return false;return finOf(await x.json())}catch(e){return false}}
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  const old=S&&S.id;G={games:j.games,cur:j.games.length-1,fb:j.fb,rules:j.rules};norm();
  if(!S)return false;if(S.id!==old){stD=null;stFor='';bc=[];msgs=[];msgFor='';rsClosed=false;rsFor='';regSt='';bindCode=null;bindMsg=''}
@@ -421,7 +427,7 @@ function gotIn(){okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame
 
 /* ================= eventi ================= */
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
-document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='rp')regPin=e.target.value.slice(0,30);if(i==='re')regEmail=e.target.value.trim().slice(0,80)});
+document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='rp'){if(regMode!=='login'&&/\D/.test(e.target.value))e.target.value=e.target.value.replace(/\D/g,'');regPin=e.target.value.slice(0,regMode==='login'?30:6)}if(i==='re')regEmail=e.target.value.trim().slice(0,80)});
 document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Enter'&&t&&(t.id==='rn'||t.id==='re'||t.id==='rp')){const b=document.querySelector('button[data-a="reg"],button[data-a="rlog"],button[data-a="rrec"]');if(b){e.preventDefault();t.blur();b.click()}}});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const q={jcd:'[data-a=joinc]'}[e.target.id];if(!q)return;const b=document.querySelector(q);if(b){e.preventDefault();b.click()}});
 document.addEventListener('click',async e=>{
@@ -431,7 +437,7 @@ document.addEventListener('click',async e=>{
  if(a==='reg'||a==='rlog'){const lg=a==='rlog',el=document.getElementById('rn'),n=cleanN(el&&el.value),pin=String(regPin||'').trim(),em=String(regEmail||'').trim().toLowerCase();regDraft=n;
   if(n.length<2){regMsg=lg?'Scrivi il nome con cui ti eri registrato.':'Scrivi il tuo nome (almeno 2 lettere).';render();return}
   if(!lg&&!EMRE.test(em)){regMsg='Scrivi un’email valida: serve a recuperare la password se la dimentichi.';render();return}
-  if(pin.length<4||pin.length>30){regMsg=lg?'Inserisci la tua password.':'Scegli una password di almeno 4 caratteri.';render();return}
+  if(lg?(pin.length<1||pin.length>30):!/^\d{6}$/.test(pin)){regMsg=lg?'Inserisci la tua password.':'La password deve essere di 6 numeri (per esempio 482916).';render();return}
   regMsg=lg?'Controllo…':'Registrazione in corso…';render();
   const q=await gReg(n,pin,!lg,em),c=q.c;
   if(c===1){regMsg=lg?'❌ La password non è giusta. Riprova, oppure tocca il pulsante «🔑 Password dimenticata?» qui sotto: ti serve solo l’email usata in registrazione.':'❌ Nome già usato da un altro giocatore. Se sei tu, tocca «Ho già un account» e inserisci la tua password; altrimenti aggiungi cognome o iniziale.';render();return}
@@ -447,7 +453,7 @@ document.addEventListener('click',async e=>{
  if(a==='rrec'){const el=document.getElementById('rn'),n=cleanN(el&&el.value),em=String(regEmail||'').trim(),pw=String(regPin||'').trim();regDraft=n;
   if(n.length<2){regMsg='Scrivi il nome con cui ti eri registrato.';render();return}
   if(!EMRE.test(em)){regMsg='Scrivi l’email usata in registrazione.';render();return}
-  if(pw.length<4||pw.length>30){regMsg='Scegli una nuova password di almeno 4 caratteri.';render();return}
+  if(!/^\d{6}$/.test(pw)){regMsg='La nuova password deve essere di 6 numeri (per esempio 482916).';render();return}
   regMsg='Controllo…';render();
   const q=await gRecover(n,em,pw),c=q.c;
   if(c===0){regMode='login';regEmail='';regMsg='✅ Password cambiata! Ti faccio entrare…';render();setTimeout(()=>{if(regMode==='login'&&/^✅/.test(regMsg)){const bt=document.querySelector('[data-a="rlog"]');if(bt)bt.click()}},700);return}
@@ -456,10 +462,11 @@ document.addEventListener('click',async e=>{
   try{const x=await fetch((fbBase()||FB_DEFAULT)+'/registry/'+encodeURIComponent(r.rid)+'/want.json',{method:'PUT',body:JSON.stringify({'.sv':'timestamp'})});
    if(x.ok){idMark(o=>{o.w=Date.now()},r.rid);wantMsg=''}else wantMsg='❌ Il database ha rifiutato l’invio: avvisa l’organizzatore.'}catch(e){wantMsg='❌ Nessuna connessione: riprova.'}
   render();return}
- if(a==='joinc'){const el=document.getElementById('jcd'),v=(el&&el.value)||'',sc=shortCode(v);let ok=false;
-  if(sc){jmsg='Cerco la partita…';render();try{const x=await fetch(FB_DEFAULT+'/codes/'+sc+'.json');const d=x.ok?await x.json():null;ok=typeof d==='string'&&joinCode(d)}catch(err){}
-   if(!ok)jmsg='Codice non trovato: controlla le lettere o chiedi all’organizzatore'}
-  else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}
+ if(a==='joinc'){const el=document.getElementById('jcd'),v=(el&&el.value)||'',sc=shortCode(v);let ok=false,done=false;
+  if(sc){jmsg='Cerco la partita…';render();try{const x=await fetch(FB_DEFAULT+'/codes/'+sc+'.json');const d=x.ok?await x.json():null;if(typeof d==='string'&&await codeEnded(d))done=true;else ok=typeof d==='string'&&joinCode(d)}catch(err){}
+   if(!ok&&!done)jmsg='Codice non trovato: controlla le lettere o chiedi all’organizzatore'}
+  else{if(await codeEnded(v))done=true;else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}}
+  if(done)jmsg='🏁 Questa partita è già conclusa: il codice non è più valido.';
   if(ok)gotIn();else{dt.ot=true;render()}return}
  if(a==='sp'){const o=idsGet();if(o.list.some(x=>x.rid===b.dataset.rid)&&o.cur!==b.dataset.rid){o.cur=b.dataset.rid;idsPut(o);resetProf();regAdding=false;render();poll()}return}
  if(a==='padd'){if(closedReg()){toast('Partita iniziata: non si possono più aggiungere profili');render();return}regAdding=true;regMode='new';regMsg='';regDraft='';regPin='';regEmail='';render();return}
