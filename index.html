@@ -221,6 +221,8 @@ const me=()=>{const r=regRec();return r?r.n:''};
 const isBound=()=>{const r=idGet();return !!(r&&S&&S.id&&r.s&&r.s[S.id])};
 
 /* chiave segreta per partita (derivata dal PIN, quindi identica su ogni dispositivo) */
+const rnd=()=>{const a=new Uint8Array(16);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<16;i++)a[i]=Math.random()*256}return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
+const gameK=async kg=>(await sha('hl|g|'+S.id+'|'+kg)).slice(0,32);
 const derK=async(n,pin)=>(await sha('hl|'+S.id+'|'+pidOf(n)+'|'+pin)).slice(0,32);
 function setPkey(nm,k){const o=ljson('uipk',{});o[S.id+'|'+pidOf(nm)]=k;lset('uipk',JSON.stringify(o))}
 function pkey(nm){const o=ljson('uipk',{}),id=S.id+'|'+pidOf(nm);if(!o[id]){const a=new Uint8Array(16);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<16;i++)a[i]=Math.random()*256}o[id]=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');lset('uipk',JSON.stringify(o))}return o[id]}
@@ -349,16 +351,16 @@ function render(){
    c: 0 ok · 1 nome preso con altro PIN · 3 offline · 5 registro non disponibile · 6 nome non trovato */
 async function gReg(n,pin,create,em){const base=fbBase()||FB_DEFAULT,rid=pidOf(n),u=base+'/registry/'+encodeURIComponent(rid)+'.json',k=(await sha('hl|*|'+rid+'|'+pin)).slice(0,32);
  try{const x=await fetch(u);if(!x.ok)return{c:5};const d=await x.json();
-  if(d&&d.k)return d.k===k?{c:0,n:cleanN(d.n)||n,w:+d.want||0}:{c:1};
+  if(d&&d.k)return d.k===k?{c:0,n:cleanN(d.n)||n,w:+d.want||0,kg:typeof d.kg==='string'?d.kg:''}:{c:1};
   if(!create)return{c:6};
-  const y=await fetch(u,{method:'PUT',body:JSON.stringify(Object.assign({n:n,k:k,ts:{'.sv':'timestamp'}},em?{e:(await sha('hl|em|'+em.toLowerCase())).slice(0,32)}:{}))});return y.ok?{c:0,n:n,w:0}:{c:5}}catch(e){return{c:3}}}
+  const kg=rnd(),y=await fetch(u,{method:'PUT',body:JSON.stringify(Object.assign({n:n,k:k,kg:kg,ts:{'.sv':'timestamp'}},em?{e:(await sha('hl|em|'+em.toLowerCase())).slice(0,32)}:{}))});return y.ok?{c:0,n:n,w:0,kg:kg}:{c:5}}catch(e){return{c:3}}}
 /* Recupero password: l'email (confrontata in forma cifrata) conferma che sei tu; nessuna email viene spedita */
 async function gRecover(n,em,pw){const base=fbBase()||FB_DEFAULT,rid=pidOf(n),u=base+'/registry/'+encodeURIComponent(rid)+'.json';
  try{const x=await fetch(u);if(!x.ok)return{c:5};const d=await x.json();if(!d||!d.k)return{c:6};if(!d.e)return{c:7};
   const ek=(await sha('hl|em|'+em.toLowerCase())).slice(0,32);if(d.e!==ek)return{c:8};
   const k=(await sha('hl|*|'+rid+'|'+pw)).slice(0,32),y=await fetch(u,{method:'PUT',body:JSON.stringify(Object.assign({},d,{k:k}))});
   if(!y.ok)return{c:5};
-  if(ready()){try{const nk=await derK(d.n||n,pw),pu=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(rid)+'/k.json',z=await fetch(pu);if(z.ok&&(await z.json()))await fetch(pu,{method:'PUT',body:JSON.stringify(nk)})}catch(e){}}
+  if(!d.kg&&ready()){try{const nk=await derK(d.n||n,pw),pu=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(rid)+'/k.json',z=await fetch(pu);if(z.ok&&(await z.json()))await fetch(pu,{method:'PUT',body:JSON.stringify(nk)})}catch(e){}}
   return{c:0,n:cleanN(d.n)||n}}catch(e){return{c:3}}}
 /* Iscrive il nome nella partita (/players/ID/nome): l'admin lo vede e lo può rinominare */
 async function fbReg(n){if(!ready())return 4;const u=fbBase()+'/players/'+S.id+'/'+encodeURIComponent(pidOf(n))+'.json';
@@ -367,7 +369,7 @@ async function fbReg(n){if(!ready())return 4;const u=fbBase()+'/players/'+S.id+'
 async function bindGame(force){const r=idGet();if(!r||!ready())return 4;if(!force&&r.s&&r.s[S.id])return 0;if(binding)return -1;
  if(closedReg()&&!r.login&&!(r.s&&r.s[S.id])){if(bindCode!==7){bindCode=7;bindMsg='🔒 Iscrizioni chiuse: la partita è già iniziata, non puoi più entrare con un nuovo profilo. Scrivi all’organizzatore se serve.';regSt='err';render()}return 7}
  binding=true;bindMsg='';bindCode=null;const gid=S.id;let c=0;
- try{if(r.pin)setPkey(r.n,await derK(r.n,r.pin));
+ try{if(r.kg)setPkey(r.n,await gameK(r.kg));else if(r.pin)setPkey(r.n,await derK(r.n,r.pin));
   if(r.login&&!(r.s&&r.s[gid])){const x=await fetch(fbBase()+'/players/'+gid+'/'+encodeURIComponent(r.rid)+'.json');if(!x.ok)c=3;else{const d=await x.json();if(!d||!d.k)c=6}}
   if(!c)c=await fbReg(r.n)}catch(e){c=3}
  binding=false;if(!S||S.id!==gid)return c;
@@ -421,7 +423,7 @@ function gotIn(){okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
 document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='rp')regPin=e.target.value.slice(0,30);if(i==='re')regEmail=e.target.value.trim().slice(0,80)});
 document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Enter'&&t&&(t.id==='rn'||t.id==='re'||t.id==='rp')){const b=document.querySelector('button[data-a="reg"],button[data-a="rlog"],button[data-a="rrec"]');if(b){e.preventDefault();t.blur();b.click()}}});
-document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const q={jcd:'[data-a=joinc]',rn:'[data-a=reg],[data-a=rlog]',rp:'[data-a=reg],[data-a=rlog]'}[e.target.id];if(!q)return;const b=document.querySelector(q);if(b){e.preventDefault();b.click()}});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const q={jcd:'[data-a=joinc]'}[e.target.id];if(!q)return;const b=document.querySelector(q);if(b){e.preventDefault();b.click()}});
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;
  const ae=document.activeElement;if(ae&&ae!==b&&ae.blur)ae.blur();
@@ -436,7 +438,7 @@ document.addEventListener('click',async e=>{
   if(c===3){regMsg='❌ Nessuna connessione: riprova.';render();return}
   if(c===6){regMsg='❌ Non trovo nessun account con questo nome. Controlla come l’hai scritto. Se non ti sei mai registrato, tocca «Prima volta? Crea un nuovo account». Se l’organizzatore ha resettato la tua password, crea di nuovo l’account con lo stesso nome.';render();return}
   const nn=q.n||n;
-  idPut({n:nn,rid:pidOf(nn),pin,s:{},gn:{},w:q.w||undefined,login:(lg&&c===5)?1:undefined});
+  idPut({n:nn,rid:pidOf(nn),pin,kg:q.kg||undefined,s:{},gn:{},w:q.w||undefined,login:(lg&&c===5)?1:undefined});
   resetProf();regAdding=false;regPin='';regEmail='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;wantMsg='';lset('uipname',nn);
   okmsg=lg?'✅ Bentornato, '+nn:'✅ Account creato: benvenuto, '+nn+'! Ora invia l’iscrizione all’admin.';setTimeout(()=>{okmsg='';render()},8000);
   render();if(ready()){bindGame();poll()}return}
