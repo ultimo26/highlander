@@ -57,6 +57,24 @@ button:disabled{opacity:.5;cursor:default}
 .mg{border:1px solid var(--ac);border-radius:10px;padding:8px;margin:6px 0}
 summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8px}
 
+/* prima pagina: caratteri più grandi (registrazione e codice) */
+.big h2{font-size:22px;margin-bottom:10px}.big .mu{font-size:16px}.big .nb{font-size:16px;padding:11px 13px}
+.big input,.big button{font-size:19px;padding:15px 12px}.big .link{font-size:17px}.big .fgt{font-size:18px;padding:14px}
+.gx .card{padding:14px}.gx .gc b{font-size:18px}.gx .gc .mu{font-size:15px}.gx .gh{font-size:18px}
+.gx input,.gx button{font-size:19px;padding:15px 12px}.gx .gr button{padding:15px 22px}.gx .link{font-size:16px}
+.gx .stp{font-size:13px}.gx .stp span{font-size:22px}#jcd{font-size:22px;letter-spacing:1px}
+/* pagina puntate: caratteri e icone più grandi */
+.bx h2{font-size:21px}.bx .mu{font-size:15px}.bx .nb{font-size:16px}.bx .gh{font-size:18px}
+.bx button,.bx input,.bx textarea{font-size:18px}.bx button{padding:14px 11px}.bx .link{font-size:16px}
+.bx .teams{gap:10px}.bx .teams button{padding:17px 6px;font-size:19px;border-left-width:8px}
+.bx .tw{grid-template-columns:minmax(0,1fr) 124px}.bx .side{font-size:14px;padding:8px}.bx .side b{font-size:15px}
+.bx .step{font-size:19px}.bx .cd{font-size:16px}.bx .cd b{font-size:32px}.bx .cd span{font-size:15px}
+.bx .row{font-size:17px;padding:9px 0}.bx .inl{font-size:17px;padding:6px 12px}
+.bx summary b{font-size:18px}.bx .mg{font-size:16px}.bx .chips button{font-size:17px}
+/* firma */
+.sig{display:flex;align-items:center;justify-content:center;gap:10px;margin:22px 0 14px;color:var(--mu);font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.sig::before,.sig::after{content:"";height:1px;width:34px;background:var(--bd)}
+.sig b{font:italic 700 20px/1 Georgia,'Times New Roman',serif;letter-spacing:.02em;text-transform:none;color:var(--on);background:linear-gradient(135deg,var(--ac),#0e5c30);padding:7px 11px 8px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.25),inset 0 0 0 1px rgba(255,255,255,.18)}
 /* guida passo-passo */
 #hl{display:none}#hl.on{display:block}
 .hl-spot{position:fixed;z-index:150;pointer-events:none;border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55);transition:left .25s,top .25s,width .25s,height .25s}
@@ -83,6 +101,7 @@ summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8p
 <body>
 <div class="hd"><h1>⚽ Highlander Friends</h1><button id="thm" type="button" aria-label="Cambia tema"></button></div>
 <div id="app"></div>
+<div class="sig"><span>creato da</span><b>AG</b></div>
 <script>
 /* ================= costanti ================= */
 const DEF=['Atalanta','Bologna','Cagliari','Como','Fiorentina','Frosinone','Genoa','Inter','Juventus','Lazio','Lecce','Milan','Monza','Napoli','Parma','Roma','Sassuolo','Torino','Udinese','Venezia'];
@@ -188,7 +207,7 @@ const shortCode=v=>{const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,
 let G=null,S=null;                       // G = dati partita salvati, S = partita corrente
 let stD=null,stFor='',rsClosed=false,rsFor='',bc=[];
 let msgs=[],msgFor='',msgText='',msgBusy=false,msgNote='',regAdding=false;
-let regShow=false,regMode='new',regDraft='',regPin='',regEmail='',wantMsg='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
+let jcdDraft='',regShow=true,regMode='new',regDraft='',regPin='',regEmail='',wantMsg='',regMsg='',jmsg='',okmsg='',fbmsg='',sending=false,binding=false,bindMsg='',bindCode=null,regSt='',draft={team:''};
 const save=()=>{if(G)lset('uipj',JSON.stringify(G))};
 function norm(){
  if(!G||!Array.isArray(G.games)||!G.games.length){G=null;S=null;return}
@@ -240,11 +259,12 @@ const normT=t=>String(t).trim().toLowerCase();
 const srvUsed=()=>{try{const u=stD&&S&&stFor===S.id&&stD.u&&stD.u[pidOf(me())];return Array.isArray(u)?u.slice():(u&&typeof u==='object'?Object.values(u):[])}catch(e){return[]}};
 function allUsed(u){const seen=new Set(),out=[];srvUsed().concat(u.used).forEach(t=>{const k=normT(t);if(!seen.has(k)){seen.add(k);const c=teams().find(x=>normT(x)===k);out.push(c||String(t).trim())}});return out}
 function urec(){const o=uall(),k=ukey(),r=o[k]||{used:[],pend:null};
- if(r.pend){const d=r.pend.dl?parseDl(r.pend.dl):NaN,cl=ready()&&rsFor===S.id&&rsClosed,pn=r.pend.rn|0,
+ if(r.pend){const cd=dlMs(),d=cd!==null?cd:(r.pend.dl?parseDl(r.pend.dl):NaN),cl=ready()&&rsFor===S.id&&rsClosed,pn=r.pend.rn|0,
   nx=!!(pn&&stD&&stFor===S.id&&(stD.rn>pn||(stD.rn===0&&stD.rc>=pn)));
   if((!isNaN(d)&&d<=Date.now())||cl||nx||srvUsed().some(x=>normT(x)===normT(r.pend.t))){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}}
  return r}
-function recordSend(t){const o=uall(),k=ukey(),r=urec();r.pend={t,dl:S.cfg.deadline||'',ts:Date.now(),rn:stD&&stFor===S.id?(stD.rn|0):0};o[k]=r;usave(o)}
+function recordSend(t){const rn0=stD&&stFor===S.id?(stD.rn|0):0;{const o0=uall(),k0=ukey(),r0=o0[k0];if(r0&&r0.pend&&rn0>0&&(r0.pend.rn|0)===rn0){r0.pend=null;usave(o0)}}
+ const o=uall(),k=ukey(),r=urec();r.pend={t,dl:S.cfg.deadline||'',ts:Date.now(),rn:stD&&stFor===S.id?(stD.rn|0):0};o[k]=r;usave(o)}
 
 /* avvisi dell'admin nascosti dal giocatore */
 const hidAll=()=>ljson('uiphid',{});
@@ -279,12 +299,12 @@ function regScreen(){const m=regMode,lg=m==='login',rc=m==='rec',add=!!idGet();
  const f=`<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}">`
   +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="${rc?'Email usata in registrazione':'Email (ti serve se dimentichi la password)'}" value="${esc(regEmail)}">`)
   +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" inputmode="numeric" pattern="[0-9]*" maxlength="${lg?30:6}" placeholder="${rc?'Nuova password (6 numeri)':lg?'Password':'Password (6 numeri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
- return `<div class="card"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^(✅|Controllo)/.test(regMsg)?'':' w'}">${esc(regMsg)}</div>`:''}`
+ return `<div class="card big"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^(✅|Controllo)/.test(regMsg)?'':' w'}">${esc(regMsg)}</div>`:''}`
   +(lg?`<button class="fgt" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">🆕 Prima volta? Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">📱 Ho già un account (anche su un altro dispositivo)</button>`)
   +(add?'<button class="link" data-a="addcancel">← Annulla</button>':'')+`</div>`}
 
 /* 2 · codice partita */
-const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
+const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
 const pathCard=()=>{const r=idGet(),w=!!(r&&r.w);
  const st=[['✅','Account'],[w?'✅':'👉','Iscrizione'],[w?'👉':'⏳','Codice'],['⏳','Puntata']];
  return `<div class="stp" id="hlpath">${st.map((x,i)=>`<div class="${x[0]==='👉'?'on':''}"><span>${x[0]}</span>${i+1} · ${x[1]}</div>`).join('')}</div>`};
@@ -297,7 +317,7 @@ function gateScreen(){const r=idGet();
  const off=G&&S&&!ready()?`<div class="card gc" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><span class="mu">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</span></div>`:'';
  return `<div class="gx">`+(codeStale()?`<div class="nb w" role="alert">🔑 <b>Il codice partita è cambiato.</b> Inserisci il nuovo codice che ti ha mandato l’organizzatore.</div>`:'')+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
  gProf()+pathCard()+wantCard()+off+
- `<div class="card gc"><b>🔑 Tappa 3 · Codice partita</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita"><button class="sel" data-a="joinc">Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
+ `<div class="card gc"><b>🔑 Tappa 3 · Codice partita</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
  rulesBox()+
  `<div class="gl">${closedReg()?'':'<button class="link" data-a="padd">➕ Altro profilo</button>'}<button class="link" data-a="prm">🚪 Rimuovi profilo</button></div></div>`}
 
@@ -350,7 +370,7 @@ function betScreen(){
 function view(){
  if(!idGet()||regAdding)return regScreen();
  if(!ready()||!codeOk())return gateScreen();
- return betScreen()}
+ return '<div class="bx">'+betScreen()+'</div>'}
 function render(){
  const a=document.activeElement;if(a&&['INPUT','TEXTAREA'].includes(a.tagName))return;
  $.innerHTML=guideBar()+(LS?'':'<div class="card"><b>⚠️ Dati non salvabili</b><p class="mu">Questo browser non permette di salvare i dati. Apri la pagina con Chrome o Safari (non dall’anteprima di WhatsApp).</p></div>')+view()}
@@ -419,7 +439,11 @@ async function fbSend(){
   fbmsg='✅ Puntata registrata: '+tm+'. Finché il turno è aperto puoi cambiarla.';recordSend(tm);
  }catch(e){fbmsg='❌ Invio non riuscito (codice: '+st+'). Controlla la connessione e riprova.'}
  sending=false;render()}
-function poll(){fbSt();fbRS();fbNm();fbBc();fbMsgs()}
+async function fbMyBet(){const r=regRec();if(!(r&&ready()&&isBound()))return;const gid=S.id;
+ try{const x=await fetch(fbBase()+'/bets/'+gid+'/'+encodeURIComponent(pidOf(r.n))+'.json');if(!x.ok)return;const d=await x.json();if(!S||S.id!==gid)return;
+  const t=d&&typeof d.t==='string'?canon(d.t):'';if(!t)return;const u=urec();if(!u.pend||normT(u.pend.t)===normT(t))return;
+  const o=uall(),q=o[ukey()];if(q&&q.pend){q.pend.t=t;usave(o);render()}}catch(e){}}
+function poll(){fbSt();fbRS();fbNm();fbBc();fbMsgs();fbMyBet()}
 
 /* ================= ingresso in partita ================= */
 async function codeEnded(v){try{const t=codeOf(v),j=t&&dec(t);if(!j||!j.games||!j.games.length)return '';const g=j.games[j.games.length-1],fb=String(j.fb||FB_DEFAULT).trim().replace(/\/+$/,'');if(!g||!g.id||!FBRE.test(fb))return '';const x=await fetch(fb+'/status/'+encodeURIComponent(g.id)+'.json');if(!x.ok)return '';const d=await x.json();if(finOf(d))return 'ended';if(d&&d.jh&&d.jh!==(j.h||''))return 'old';return ''}catch(e){return ''}}
@@ -427,11 +451,11 @@ function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  const old=S&&S.id;G={games:j.games,cur:j.games.length-1,fb:j.fb,rules:j.rules};norm();
  if(!S)return false;if(S.id!==old){stD=null;stFor='';bc=[];msgs=[];msgFor='';rsClosed=false;rsFor='';regSt='';bindCode=null;bindMsg=''}
  draft.team='';joinTok=j.h||'';if(!idGet())viaCode=S.id;save();return true}
-function gotIn(){idMark(o=>{(o.cj=o.cj||{})[S.id]=joinTok||'1';if(o.s)delete o.s[S.id]});okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame().then(poll);poll();setTimeout(()=>{okmsg='';render()},8000)}
+function gotIn(){jcdDraft='';idMark(o=>{(o.cj=o.cj||{})[S.id]=joinTok||'1';if(o.s)delete o.s[S.id]});okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame().then(poll);poll();setTimeout(()=>{okmsg='';render()},8000)}
 
 /* ================= eventi ================= */
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
-document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='rp'){if(regMode!=='login'&&/\D/.test(e.target.value))e.target.value=e.target.value.replace(/\D/g,'');regPin=e.target.value.slice(0,regMode==='login'?30:6)}if(i==='re')regEmail=e.target.value.trim().slice(0,80)});
+document.addEventListener('input',e=>{const i=e.target.id;if(i==='rn')regDraft=e.target.value;if(i==='mt')msgText=e.target.value;if(i==='jcd')jcdDraft=e.target.value;if(i==='rp'){if(regMode!=='login'&&/\D/.test(e.target.value))e.target.value=e.target.value.replace(/\D/g,'');regPin=e.target.value.slice(0,regMode==='login'?30:6)}if(i==='re')regEmail=e.target.value.trim().slice(0,80)});
 document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Enter'&&t&&(t.id==='rn'||t.id==='re'||t.id==='rp')){const b=document.querySelector('button[data-a="reg"],button[data-a="rlog"],button[data-a="rrec"]');if(b){e.preventDefault();t.blur();b.click()}}});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const q={jcd:'[data-a=joinc]'}[e.target.id];if(!q)return;const b=document.querySelector(q);if(b){e.preventDefault();b.click()}});
 document.addEventListener('click',async e=>{
