@@ -371,8 +371,9 @@ function view(){
  if(!idGet()||regAdding)return regScreen();
  if(!ready()||!codeOk())return gateScreen();
  return '<div class="bx">'+betScreen()+'</div>'}
+let rPend=0;document.addEventListener('focusout',()=>setTimeout(()=>{if(rPend)render()},80));
 function render(){
- const a=document.activeElement;if(a&&['INPUT','TEXTAREA'].includes(a.tagName))return;
+ const a=document.activeElement;if(a&&['INPUT','TEXTAREA'].includes(a.tagName)){rPend=1;return}rPend=0;
  $.innerHTML=guideBar()+(LS?'':'<div class="card"><b>⚠️ Dati non salvabili</b><p class="mu">Questo browser non permette di salvare i dati. Apri la pagina con Chrome o Safari (non dall’anteprima di WhatsApp).</p></div>')+view()}
 
 /* ================= rete ================= */
@@ -415,11 +416,11 @@ async function fbNm(){const r0=idGet();if(!r0||!ready())return;
 function setRs(v){if(regSt!==v){regSt=v;render()}}
 /* Stato turno (aperto/chiuso) */
 async function fbRS(){if(!ready())return;if(rsFor!==S.id){rsFor=S.id;rsClosed=false}
- try{const x=await fetch(fbBase()+'/bets/'+S.id+'/__stato.json');if(!x.ok)return;const d=await x.json(),c=!!(d&&d.t==='chiuso');if(c!==rsClosed){rsClosed=c;if(!c)fbmsg='';render()}}catch(e){}}
+ try{const x=await fetch(fbBase()+'/bets/'+S.id+'/__stato.json',{cache:'no-store'});if(!x.ok)return;const d=await x.json(),c=!!(d&&d.t==='chiuso');if(c!==rsClosed){rsClosed=c;if(!c)fbmsg='';else draft.team='';render()}}catch(e){}}
 /* Stato partita (turno, in gara, eliminati, scadenza, reset) */
 function genSync(id,d){try{const g=(d&&d.gen)||0,m=ljson('uipgen',{}),was=m[id]||0;if(g===was)return false;m[id]=g;lset('uipgen',JSON.stringify(m));
  if(!S||S.id!==id)return false;const o=uall(),pre=S.name.toLowerCase()+'|';let ch=false;Object.keys(o).forEach(k=>{if(k.indexOf(pre)===0){delete o[k];ch=true}});if(ch)usave(o);draft.team='';return ch}catch(e){return false}}
-async function fbSt(){if(!ready())return;const id=S.id;try{const x=await fetch(fbBase()+'/status/'+id+'.json');if(!x.ok)return;const d=await x.json();let wiped=genSync(id,d);
+async function fbSt(){if(!ready())return;const id=S.id;try{const x=await fetch(fbBase()+'/status/'+id+'.json',{cache:'no-store'});if(!x.ok)return;const d=await x.json();let wiped=genSync(id,d);
  if(d&&typeof d.dl==='number'&&S&&S.id===id){const v=d.dl>0?new Date(d.dl).toISOString():'';if((S.cfg.deadline||'')!==v){S.cfg.deadline=v;save();wiped=true}}
  if(wiped||stFor!==id||JSON.stringify(d)!==JSON.stringify(stD)){stD=d;stFor=id;render()}}catch(e){}}
 /* Avvisi dell'admin a tutti */
@@ -431,7 +432,7 @@ async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0
 /* Invio puntata */
 async function fbSend(){
  const nm=cleanN(me()),tm=draft.team;if(!codeOk()){toast('🔑 Per puntare devi inserire il codice partita.');render();return}if(!nm||!tm||sending||!ready()||!isBound())return;
- await fbRS();try{const x=await fetch(fbBase()+'/status/'+encodeURIComponent(S.id)+'.json');if(x.ok){const d=await x.json();if(d)stD=d,stFor=S.id}}catch(e){}if(!codeOk()){toast('🔑 Il codice partita è cambiato: inserisci il nuovo codice.');render();return}{const lk=lockKind();if(lk){toast(lockText(lk));return}}
+ await fbRS();try{const x=await fetch(fbBase()+'/status/'+encodeURIComponent(S.id)+'.json',{cache:'no-store'});if(x.ok){const d=await x.json();if(d)stD=d,stFor=S.id}}catch(e){}if(!codeOk()){toast('🔑 Il codice partita è cambiato: inserisci il nuovo codice.');render();return}{const lk=lockKind();if(lk){toast(lockText(lk));return}}
  sending=true;fbmsg='Invio in corso…';render();let st='rete';
  try{
   const x=await fetch(fbBase()+'/bets/'+S.id+'/'+encodeURIComponent(pidOf(nm))+'.json',{method:'PUT',body:JSON.stringify({n:nm,t:tm,k:pkey(nm),ts:{'.sv':'timestamp'}})});
@@ -503,7 +504,7 @@ document.addEventListener('click',async e=>{
   const q=a==='prm'?'Rimuovere il profilo «'+r.n+'» da questo dispositivo? Per riaverlo ti serviranno nome e password.':'Vuoi cancellare il profilo «'+r.n+'» da questo dispositivo e rifare l’accesso con nome e password?';
   if(confirm(q)){rmProfile(r.rid);resetProf();regAdding=a==='idreset';regMode='login';regMsg='';regPin='';regDraft='';render();if(a==='prm'&&idGet())poll()}return}
  if(a==='rsnd'){await bindGame(true);if(bindCode>0)toast(bindMsg);render();return}
- if(a==='pk'){if(!codeOk()){toast('🔑 Per puntare devi inserire il codice partita.');render();return}if(!isBound()){toast('⏳ Attendi la conferma del tuo nome');return}const lk=lockKind();if(lk){toast(lockText(lk));return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
+ if(a==='pk'){if(!codeOk()){toast('🔑 Per puntare devi inserire il codice partita.');render();return}if(!isBound()){toast('⏳ Attendi la conferma del tuo nome');return}await Promise.all([fbRS(),fbSt()]);const lk=lockKind();if(lk){toast(lockText(lk));render();return}draft.team=draft.team===b.dataset.t?'':b.dataset.t;fbmsg='';render();return}
  if(a==='fbsend'){fbSend();return}
  if(a==='rmu'){const o=uall(),k=ukey(),r=urec(),ix=r.used.findIndex(x=>normT(x)===normT(b.dataset.t||''));if(ix>=0)r.used.splice(ix,1);o[k]=r;usave(o);render();return}
  if(a==='hm'){hidAdd(b.dataset.id);render();return}
@@ -523,7 +524,7 @@ paintTheme();
 if(location.hash.indexOf('#jg')===0&&joinCode(location.hash)){render();if(idGet())gotIn()}
 render();
 setInterval(()=>{if(ready()){const i=cdInfo();if(i.ph!==curPh){render();return}const el=document.getElementById('cd');if(el&&i.html)el.innerHTML=i.html}},1000);
-setInterval(poll,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});setTimeout(poll,500);
+setInterval(poll,10000);setInterval(()=>{if(!document.hidden&&ready()){fbRS();fbSt()}},3000);addEventListener('pageshow',()=>poll());addEventListener('focus',()=>poll());document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});setTimeout(poll,500);
 </script>
 </body>
 </html>
