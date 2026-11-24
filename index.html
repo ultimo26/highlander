@@ -179,7 +179,7 @@ function toast(t){let e=document.getElementById('toast');if(!e){e=document.creat
 function dec(t){try{let b=String(t).replace(/-/g,'+').replace(/_/g,'/');b+='='.repeat((4-b.length%4)%4);const o=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));
  const mk=(n,d,t,id)=>({name:String(n||'Partita'),id:id?String(id).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40)||undefined:undefined,cfg:{deadline:d||'',teams:Array.isArray(t)&&t.length>1?t:null}});
  if(Array.isArray(o))return o.length?{games:o.map(x=>mk(x.n,x.d,x.t)),fb:'',rules:''}:null;
- if(o&&Array.isArray(o.g)&&o.g.length)return{games:o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null,x[3])),fb:typeof o.f==='string'&&FBRE.test(o.f)?o.f.slice(0,200):'',rules:typeof o.r==='string'?o.r.slice(0,1500):''};
+ if(o&&Array.isArray(o.g)&&o.g.length)return{games:o.g.map(x=>mk(x[0],x[1],x[2]?(o.t||[])[x[2]-1]:null,x[3])),fb:typeof o.f==='string'&&FBRE.test(o.f)?o.f.slice(0,200):'',rules:typeof o.r==='string'?o.r.slice(0,1500):'',h:typeof o.h==='string'&&/^[0-9a-f]{6,16}$/.test(o.h)?o.h:''};
  return null}catch(e){return null}}
 const codeOf=s=>{const m=String(s).match(/#jg([A-Za-z0-9_-]+)/)||String(s).match(/(?:^|\s)jg([A-Za-z0-9_-]{8,})(?=\s|$)/);return m?m[1]:null};
 const shortCode=v=>{const m=String(v||'').trim().toUpperCase().replace(/[\s-]/g,'');return /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/.test(m)?m:''};
@@ -220,8 +220,9 @@ const regRec=()=>{const r=idGet();if(!r)return null;const g=S&&S.id&&r.gn&&r.gn[
 const me=()=>{const r=regRec();return r?r.n:''};
 const isBound=()=>{const r=idGet();return !!(r&&S&&S.id&&r.s&&r.s[S.id])};
 /* Si entra in partita solo col codice: il profilo deve averlo inserito (cj), essere già giocatore (s), o averlo appena inserito in questa pagina */
-let viaCode='';  /* viaCode: codice/link aperto prima di avere un profilo */
-const codeOk=()=>{const r=idGet();return !!(r&&S&&S.id&&r.cj&&r.cj[S.id])};
+let viaCode='',joinTok='';  /* viaCode: codice/link aperto prima di avere un profilo */
+const codeOk=()=>{const r=idGet();if(!(r&&S&&S.id&&r.cj&&r.cj[S.id]))return false;if(stD&&stFor===S.id&&stD.jh&&String(r.cj[S.id])!==String(stD.jh))return false;return true};
+const codeStale=()=>{const r=idGet();return !!(r&&S&&S.id&&r.cj&&r.cj[S.id]&&!codeOk())};
 
 /* chiave segreta per partita (derivata dal PIN, quindi identica su ogni dispositivo) */
 const rnd=()=>{const a=new Uint8Array(16);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<16;i++)a[i]=Math.random()*256}return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
@@ -294,7 +295,7 @@ const wantCard=()=>{const r=idGet();if(!r)return '';
  :`<div class="card gc"><b>📨 Tappa 2 · Vuoi giocare?</b><span class="mu">L’admin vedrà il tuo nome tra i giocatori.</span><button class="sel" data-a="want">📨 Invia la mia iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`};
 function gateScreen(){const r=idGet();
  const off=G&&S&&!ready()?`<div class="card gc" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><span class="mu">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</span></div>`:'';
- return `<div class="gx">`+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
+ return `<div class="gx">`+(codeStale()?`<div class="nb w" role="alert">🔑 <b>Il codice partita è cambiato.</b> Inserisci il nuovo codice che ti ha mandato l’organizzatore.</div>`:'')+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
  gProf()+pathCard()+wantCard()+off+
  `<div class="card gc"><b>🔑 Tappa 3 · Codice partita</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita"><button class="sel" data-a="joinc">Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
  rulesBox()+
@@ -410,7 +411,7 @@ async function fbMsgSend(){const r=regRec(),t=String(msgText||'').trim().slice(0
 /* Invio puntata */
 async function fbSend(){
  const nm=cleanN(me()),tm=draft.team;if(!codeOk()){toast('🔑 Per puntare devi inserire il codice partita.');render();return}if(!nm||!tm||sending||!ready()||!isBound())return;
- await fbRS();{const lk=lockKind();if(lk){toast(lockText(lk));return}}
+ await fbRS();try{const x=await fetch(fbBase()+'/status/'+encodeURIComponent(S.id)+'.json');if(x.ok){const d=await x.json();if(d)stD=d,stFor=S.id}}catch(e){}if(!codeOk()){toast('🔑 Il codice partita è cambiato: inserisci il nuovo codice.');render();return}{const lk=lockKind();if(lk){toast(lockText(lk));return}}
  sending=true;fbmsg='Invio in corso…';render();let st='rete';
  try{
   const x=await fetch(fbBase()+'/bets/'+S.id+'/'+encodeURIComponent(pidOf(nm))+'.json',{method:'PUT',body:JSON.stringify({n:nm,t:tm,k:pkey(nm),ts:{'.sv':'timestamp'}})});
@@ -421,12 +422,12 @@ async function fbSend(){
 function poll(){fbSt();fbRS();fbNm();fbBc();fbMsgs()}
 
 /* ================= ingresso in partita ================= */
-async function codeEnded(v){try{const t=codeOf(v),j=t&&dec(t);if(!j||!j.games||!j.games.length)return false;const g=j.games[j.games.length-1],fb=String(j.fb||FB_DEFAULT).trim().replace(/\/+$/,'');if(!g||!g.id||!FBRE.test(fb))return false;const x=await fetch(fb+'/status/'+encodeURIComponent(g.id)+'.json');if(!x.ok)return false;return finOf(await x.json())}catch(e){return false}}
+async function codeEnded(v){try{const t=codeOf(v),j=t&&dec(t);if(!j||!j.games||!j.games.length)return '';const g=j.games[j.games.length-1],fb=String(j.fb||FB_DEFAULT).trim().replace(/\/+$/,'');if(!g||!g.id||!FBRE.test(fb))return '';const x=await fetch(fb+'/status/'+encodeURIComponent(g.id)+'.json');if(!x.ok)return '';const d=await x.json();if(finOf(d))return 'ended';if(d&&d.jh&&d.jh!==(j.h||''))return 'old';return ''}catch(e){return ''}}
 function joinCode(v){const t=codeOf(v),j=t&&dec(t);if(!j)return false;
  const old=S&&S.id;G={games:j.games,cur:j.games.length-1,fb:j.fb,rules:j.rules};norm();
  if(!S)return false;if(S.id!==old){stD=null;stFor='';bc=[];msgs=[];msgFor='';rsClosed=false;rsFor='';regSt='';bindCode=null;bindMsg=''}
- draft.team='';if(!idGet())viaCode=S.id;save();return true}
-function gotIn(){idMark(o=>{(o.cj=o.cj||{})[S.id]=1});okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame().then(poll);poll();setTimeout(()=>{okmsg='';render()},8000)}
+ draft.team='';joinTok=j.h||'';if(!idGet())viaCode=S.id;save();return true}
+function gotIn(){idMark(o=>{(o.cj=o.cj||{})[S.id]=joinTok||'1';if(o.s)delete o.s[S.id]});okmsg='✅ Ora sei in «'+S.name+'»';jmsg='';render();bindGame().then(poll);poll();setTimeout(()=>{okmsg='';render()},8000)}
 
 /* ================= eventi ================= */
 document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.d)dt[d.dataset.d]=d.open},true);
@@ -447,7 +448,7 @@ document.addEventListener('click',async e=>{
   if(c===3){regMsg='❌ Nessuna connessione: riprova.';render();return}
   if(c===6){regMsg='❌ Non trovo nessun account con questo nome. Controlla come l’hai scritto. Se non ti sei mai registrato, tocca «Prima volta? Crea un nuovo account». Se l’organizzatore ha resettato la tua password, crea di nuovo l’account con lo stesso nome.';render();return}
   const nn=q.n||n;
-  const inh=!!(viaCode&&S&&viaCode===S.id);viaCode='';idPut({n:nn,rid:pidOf(nn),pin,kg:q.kg||undefined,s:{},cj:inh?{[S.id]:1}:{},gn:{},w:q.w||undefined,login:(lg&&c===5)?1:undefined});
+  const inh=!!(viaCode&&S&&viaCode===S.id);viaCode='';idPut({n:nn,rid:pidOf(nn),pin,kg:q.kg||undefined,s:{},cj:inh?{[S.id]:joinTok||'1'}:{},gn:{},w:q.w||undefined,login:(lg&&c===5)?1:undefined});
   resetProf();regAdding=false;regPin='';regEmail='';regMode='new';regMsg='';regSt='';bindMsg='';bindCode=null;wantMsg='';lset('uipname',nn);
   okmsg=lg?'✅ Bentornato, '+nn:'✅ Account creato: benvenuto, '+nn+'! Ora invia l’iscrizione all’admin.';setTimeout(()=>{okmsg='';render()},8000);
   render();if(ready()){bindGame();poll()}return}
@@ -465,11 +466,11 @@ document.addEventListener('click',async e=>{
   try{const x=await fetch((fbBase()||FB_DEFAULT)+'/registry/'+encodeURIComponent(r.rid)+'/want.json',{method:'PUT',body:JSON.stringify({'.sv':'timestamp'})});
    if(x.ok){idMark(o=>{o.w=Date.now()},r.rid);wantMsg=''}else wantMsg='❌ Il database ha rifiutato l’invio: avvisa l’organizzatore.'}catch(e){wantMsg='❌ Nessuna connessione: riprova.'}
   render();return}
- if(a==='joinc'){const el=document.getElementById('jcd'),v=(el&&el.value)||'',sc=shortCode(v);let ok=false,done=false;
-  if(sc){jmsg='Cerco la partita…';render();try{const x=await fetch(FB_DEFAULT+'/codes/'+sc+'.json');const d=x.ok?await x.json():null;if(typeof d==='string'&&await codeEnded(d))done=true;else ok=typeof d==='string'&&joinCode(d)}catch(err){}
+ if(a==='joinc'){const el=document.getElementById('jcd'),v=(el&&el.value)||'',sc=shortCode(v);let ok=false,done='';
+  if(sc){jmsg='Cerco la partita…';render();try{const x=await fetch(FB_DEFAULT+'/codes/'+sc+'.json');const d=x.ok?await x.json():null;if(typeof d==='string'&&(done=await codeEnded(d)))done=done;else ok=typeof d==='string'&&joinCode(d)}catch(err){}
    if(!ok&&!done)jmsg='Codice non trovato: controlla le lettere o chiedi all’organizzatore'}
-  else{if(await codeEnded(v))done=true;else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}}
-  if(done)jmsg='🏁 Questa partita è già conclusa: il codice non è più valido.';
+  else{if(done=await codeEnded(v))done=done;else{ok=joinCode(v);if(!ok)jmsg='Codice non valido: controlla le lettere (6 caratteri)'}}
+  if(done)jmsg=done==='old'?'🔑 Questo codice non è più valido: chiedi all’organizzatore il codice nuovo.':'🏁 Questa partita è già conclusa: il codice non è più valido.';
   if(ok)gotIn();else{dt.ot=true;render()}return}
  if(a==='sp'){const o=idsGet();if(o.list.some(x=>x.rid===b.dataset.rid)&&o.cur!==b.dataset.rid){o.cur=b.dataset.rid;idsPut(o);resetProf();regAdding=false;render();poll()}return}
  if(a==='padd'){if(closedReg()){toast('Partita iniziata: non si possono più aggiungere profili');render();return}regAdding=true;regMode='new';regMsg='';regDraft='';regPin='';regEmail='';render();return}
