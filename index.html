@@ -263,6 +263,8 @@ const normT=t=>String(t).trim().toLowerCase();
 const srvUsed=()=>{try{const u=stD&&S&&stFor===S.id&&stD.u&&stD.u[pidOf(me())];return Array.isArray(u)?u.slice():(u&&typeof u==='object'?Object.values(u):[])}catch(e){return[]}};
 function allUsed(u){const seen=new Set(),out=[];srvUsed().concat(u.used).forEach(t=>{const k=normT(t);if(!seen.has(k)){seen.add(k);const c=teams().find(x=>normT(x)===k);out.push(c||String(t).trim())}});return out}
 function urec(){const o=uall(),k=ukey(),r=o[k]||{used:[],pend:null};
+ /* l'admin fa fede: se ha già registrato le squadre dei turni chiusi, quelle in più salvate sul telefono (puntate cambiate) vengono tolte */
+ if(r.used.length&&stD&&stFor===S.id&&!isOut()){const cr=(stD.rn>0?stD.rc-1:stD.rc)|0;if(cr>=1&&srvUsed().length>=cr){r.used=[];o[k]=r;usave(o)}}
  if(r.pend){const cd=dlMs(),d=cd!==null?cd:(r.pend.dl?parseDl(r.pend.dl):NaN),cl=ready()&&rsFor===S.id&&rsClosed,pn=r.pend.rn|0,
   nx=!!(pn&&stD&&stFor===S.id&&(stD.rn>pn||(stD.rn===0&&stD.rc>=pn)));
   if((!isNaN(d)&&d<=Date.now())||cl||nx||srvUsed().some(x=>normT(x)===normT(r.pend.t))){if(!r.used.includes(r.pend.t))r.used.push(r.pend.t);r.pend=null;o[k]=r;usave(o)}}
