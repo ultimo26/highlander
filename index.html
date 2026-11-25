@@ -28,13 +28,10 @@ button:disabled{opacity:.5;cursor:default}
 .gx .chips{margin:4px 0}
 .gh{margin:4px 2px;font-size:15px}
 .gc b{display:block}.gc .mu{display:block;margin:2px 0 6px;font-size:13px}.gc p.mu{margin:4px 0 0}.gc button{margin:2px 0}
-.stp{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0;text-align:center;font-size:11px;line-height:1.2}
-.stp div{border:1px solid var(--bd);border-radius:10px;padding:5px 2px;background:var(--card)}
-.stp span{display:block;font-size:18px;line-height:1.25}.stp .on{border-color:var(--ac);font-weight:700}
 .gr{display:flex;gap:8px}.gr input{flex:1 1 auto;min-width:0;margin:0}.gr button{width:auto;flex:none;padding:11px 18px;margin:0}
 .gl{display:flex;justify-content:space-between;gap:4px}.gl button{width:auto;margin:0}
 .teams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.teams button{margin:0;padding:12px 6px;border-left:6px solid var(--c,var(--bd))}
+.teams button{margin:0}
 .teams button.lock{opacity:.55}.teams button.used{text-decoration:line-through;opacity:.5}
 .step{font-weight:700;margin:16px 0 6px}
 .tw{display:grid;grid-template-columns:minmax(0,1fr) 98px;gap:8px;align-items:start}
@@ -62,11 +59,11 @@ summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8p
 .big input,.big button{font-size:19px;padding:15px 12px}.big .link{font-size:17px}.big .fgt{font-size:18px;padding:14px}
 .gx .card{padding:14px}.gx .gc b{font-size:18px}.gx .gc .mu{font-size:15px}.gx .gh{font-size:18px}
 .gx input,.gx button{font-size:19px;padding:15px 12px}.gx .gr button{padding:15px 22px}.gx .link{font-size:16px}
-.gx .stp{font-size:13px}.gx .stp span{font-size:22px}#jcd{font-size:22px;letter-spacing:1px}
+#jcd{font-size:22px;letter-spacing:1px}
 /* pagina puntate: caratteri e icone più grandi */
 .bx h2{font-size:21px}.bx .mu{font-size:15px}.bx .nb{font-size:16px}.bx .gh{font-size:18px}
 .bx button,.bx input,.bx textarea{font-size:18px}.bx button{padding:14px 11px}.bx .link{font-size:16px}
-.bx .teams{gap:10px}.bx .teams button{padding:17px 6px;font-size:19px;border-left-width:8px}
+.bx .teams{gap:10px}.bx .teams button{font-size:18px}
 .bx .tw{grid-template-columns:minmax(0,1fr) 124px}.bx .side{font-size:14px;padding:8px}.bx .side b{font-size:15px}
 .bx .step{font-size:19px}.bx .cd{font-size:16px}.bx .cd b{font-size:32px}.bx .cd span{font-size:15px}
 .bx .row{font-size:17px;padding:9px 0}.bx .inl{font-size:17px;padding:6px 12px}
@@ -93,21 +90,172 @@ summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8p
 .hlnew{animation:hln 1.6s ease-out infinite;border-radius:12px}
 @keyframes hln{0%{box-shadow:0 0 0 0 var(--ac)}100%{box-shadow:0 0 0 14px transparent}}
 @media (prefers-reduced-motion:reduce){.hl-spot::before,.hl-spot::after,.hlnew{animation:none}.hl-spot::after{display:none}}
+/* ===== restyle giocatore: icone, pulsanti, stemmi ===== */
+:root{--hf:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif-condensed,system-ui,sans-serif;--ac1:#2bb264;--ac2:#126a38;--soft:rgba(27,138,75,.10);--ring:rgba(27,138,75,.24);--cs:rgba(0,0,0,.22);--gold:#c99a0c;--gold-s:rgba(201,154,12,.14);--warn:#9a5b00}
+:root[data-theme="dark"]{--ac1:#5fe79a;--ac2:#23a05a;--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac1:#5fe79a;--ac2:#23a05a;--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}}
+.ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
+h1{font:700 31px/1 var(--hf);letter-spacing:.2px;margin:0}
+h2{font:700 24px/1.1 var(--hf);letter-spacing:.2px;margin:0 0 10px}
+.big h2{font-size:27px}.bx h2{font-size:26px}
+.hd{padding:2px 0 8px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--on);background:linear-gradient(160deg,var(--ac1),var(--ac2));box-shadow:0 2px 0 var(--ac2),0 8px 16px -8px var(--ac)}
+.logo svg{width:27px;height:27px}
+#thm{display:grid;place-items:center;color:var(--tx);background:var(--card)}
+#thm svg{width:22px;height:22px}
+/* pulsanti */
+button,input,textarea{border-width:1.5px;border-radius:14px}
+button{display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;background:var(--card);box-shadow:0 2px 0 var(--bd);transition:transform .08s,box-shadow .08s,background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+button:hover{border-color:var(--mu)}
+button:active{transform:translateY(2px);box-shadow:0 0 0 var(--bd)}
+button:disabled{opacity:.5;box-shadow:none;transform:none;border-color:var(--bd)}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.sel{color:var(--on);border-color:var(--ac2);background:linear-gradient(180deg,var(--ac1),var(--ac));box-shadow:0 3px 0 var(--ac2),0 10px 16px -10px var(--ac)}
+.sel:hover{border-color:var(--ac2)}
+.sel:active{box-shadow:0 0 0 var(--ac2);transform:translateY(3px)}
+.sel:disabled{opacity:1;background:var(--bd);border-color:var(--bd);color:var(--mu);box-shadow:none}
+.link{background:transparent;border:0;box-shadow:none;color:var(--mu);text-decoration:none;font-weight:500;border-radius:12px;padding:10px}
+.link:hover{background:var(--soft);color:var(--tx)}.link:active{transform:none;box-shadow:none;background:var(--soft)}
+.fgt{display:flex;background:var(--soft);box-shadow:none;border-width:1.5px}
+.guide{display:inline-flex;width:auto;margin:0;padding:8px 16px 8px 13px;border-radius:999px;background:var(--soft);border:1.5px solid var(--ring);color:var(--ac);font-size:15px;box-shadow:none}
+.guide .ic{width:19px;height:19px}
+.hlnew{border-radius:999px}
+.bx .inl,.inl{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;margin:0;border-radius:50%;box-shadow:none;font-size:16px}
+.inl .ic{width:18px;height:18px}
+/* campi */
+input,textarea{background:var(--card);box-shadow:inset 0 1px 2px rgba(20,32,26,.06);transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 4px var(--ring)}
+.fld{position:relative;margin:8px 0}
+.fld input{margin:0;padding-left:48px}
+.fld>.ic{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:21px;height:21px;color:var(--mu);pointer-events:none}
+.fld:focus-within>.ic{color:var(--ac)}
+/* schede e titoli con icona */
+.card{border-radius:18px}
+.hi{display:flex;align-items:center;gap:10px}
+.hi i{width:36px;height:36px;border-radius:12px;background:var(--soft);color:var(--ac);display:grid;place-items:center;flex:none;font-style:normal}
+.hi i .ic{width:21px;height:21px}
+.hi.w i{background:rgba(192,57,43,.12);color:var(--bad)}
+.gx .gc b,.gc b{font-family:var(--hf);font-size:22px;font-weight:700;line-height:1.15}
+.gh{display:flex;align-items:center;gap:8px}.gh .ic{color:var(--ac)}
+.nb .ic{vertical-align:-.2em;margin-right:2px}
+summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
+summary::-webkit-details-marker{display:none}
+summary b{flex:1;min-width:0}
+summary::after{content:"";width:9px;height:9px;border:solid var(--mu);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translateY(-2px);transition:transform .2s;flex:none;margin-right:4px}
+details[open]>summary::after{transform:rotate(-135deg) translateY(-2px)}
+summary b,.bx summary b{font:700 22px/1.1 var(--hf)}
+/* percorso a tappe */
+.stp{list-style:none;margin:14px 0 10px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;text-align:center;font-size:13px;line-height:1.2}
+.stp li{position:relative;color:var(--mu);font-weight:600;padding:0 2px}
+.stp li+li::before{content:"";position:absolute;top:15px;right:50%;width:100%;height:3px;background:var(--bd)}
+.stp li.dn+li::before{background:var(--ac)}
+.stp i{position:relative;z-index:1;display:grid;place-items:center;width:32px;height:32px;margin:0 auto 6px;border-radius:50%;background:var(--card);border:2px solid var(--bd);font:700 17px/1 var(--hf);font-style:normal}
+.stp i .ic{width:17px;height:17px;stroke-width:3.2}
+.stp .dn{color:var(--tx)}.stp .dn i{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.stp .on{color:var(--tx);font-weight:700}.stp .on i{border-color:var(--ac);color:var(--ac);box-shadow:0 0 0 4px var(--ring)}
+.stp span{display:block}
+.gx .stp{font-size:14px}
+/* squadre: tessere con stemma */
+.teams,.bx .teams{gap:10px}
+.teams button,.bx .teams button{justify-content:flex-start;gap:8px;text-align:left;padding:10px;margin:0;min-height:60px;font-weight:600}
+.crest{width:30px;height:35px;flex:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.crest text{font:700 12.5px var(--hf);letter-spacing:.3px}
+.crest .o{fill:none;stroke:var(--cs);stroke-width:1.5}
+.tn{min-width:0;overflow-wrap:break-word;font:700 21px/1.05 var(--hf)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.teams button em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:var(--mu);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.teams button em .ic{width:17px;height:17px}
+.teams button.sel,.bx .teams button.sel{background:var(--soft);color:var(--tx);border-color:var(--ac);box-shadow:0 0 0 3px var(--ring)}
+.teams button.sel .ck{width:24px;height:24px;border-radius:50%;background:var(--ac);color:var(--on);justify-content:center}
+.teams button.sel .ck .ic{width:15px;height:15px;stroke-width:3.2}
+.teams button.used{opacity:.55;box-shadow:none}.teams button.used .crest{filter:grayscale(1)}.teams button.used .tn{text-decoration:line-through}
+.teams button.pend{outline:2px dashed var(--ac);outline-offset:-4px}
+.bx .side b{display:flex;align-items:center;gap:6px;font:700 19px/1.1 var(--hf)}
+.bx .side div{display:inline-flex;align-items:center;gap:4px}
+.side .ic{width:.95em;height:.95em}
+.sendbar{box-shadow:0 -14px 12px -12px rgba(20,32,26,.16)}
+/* titoli dei passi */
+.step{display:flex;align-items:center;gap:10px;font:700 22px/1.1 var(--hf);margin:16px 0 8px}
+.bx .step{font-size:23px}
+.step .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ac);color:var(--on);font:700 16px/1 var(--hf);font-style:normal}
+.step.me,.bx .step.me{display:inline-flex;margin:4px 0 0;padding:6px 15px 6px 11px;border-radius:999px;background:var(--soft);font-size:21px}
+.step.me .ic{color:var(--ac)}
+.rn{display:flex;align-items:center;gap:8px;font:700 22px/1.1 var(--hf);margin:2px 0 6px}.rn .ic{color:var(--ac)}
+/* conto alla rovescia e stati */
+.cd{border-radius:16px;background:var(--card)}
+.cd b,.bx .cd b{font:700 40px/1.1 var(--hf)}
+.cd .ic{width:1.05em;height:1.05em}
+.cd.last{color:var(--warn);border-color:var(--gold);background:var(--gold-s)}
+.cd.closed{background:rgba(192,57,43,.08)}
+.cd.sent{border-color:var(--ac);background:var(--soft);color:var(--tx)}
+.cd.sent>.ic{color:var(--ac)}
+.cd.sent b,.bx .cd.sent b{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0}
+.no{background:rgba(192,57,43,.06)}
+.bigic{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 6px;border-radius:50%}
+.bigic .ic{width:36px;height:36px}
+.bigic.bad{background:rgba(192,57,43,.12);color:var(--bad)}.bigic.gold{background:var(--gold-s);color:var(--gold)}
+/* messaggi */
+.mg,.mg.p{border:1px solid var(--ring);border-radius:16px;background:var(--soft);padding:10px 12px;margin:8px 0}
+.mg.p{border-color:var(--bd);background:var(--bg)}
+@media (prefers-reduced-motion:reduce){button,input,textarea,summary::after{transition:none}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#1e8e4e">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Highlander">
 <script>if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
 </head>
 <body>
-<div class="hd"><h1>⚽ Highlander Friends</h1><button id="thm" type="button" aria-label="Cambia tema"></button></div>
+<div class="hd"><div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m12 8 3.8 2.8-1.45 4.45h-4.7L8.2 10.8z"/><path d="M12 8V2.2"/><path d="m15.8 10.8 5.4-1.8"/><path d="m14.35 15.25 3.3 4.5"/><path d="m9.65 15.25-3.3 4.5"/><path d="M8.2 10.8 2.8 9"/></svg></span><h1>Highlander Friends</h1></div><button id="thm" type="button" aria-label="Cambia tema"></button></div>
 <div id="app"></div>
 <div class="sig"><span>creato da</span><b>AG</b></div>
 <script>
 /* ================= costanti ================= */
+/* ---- icone (SVG, stesso tratto ovunque) e stemmi squadra ---- */
+const IC={
+ user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+ 'user-plus':'<path d="M2 21a8 8 0 0 1 13.292-6"/><circle cx="10" cy="8" r="5"/><path d="M19 16v6"/><path d="M22 19h-6"/>',
+ mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+ lock:'<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+ key:'<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
+ eye:'<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+ 'eye-off':'<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>',
+ send:'<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ 'circle-check':'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+ 'circle-x':'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+ x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+ 'log-in':'<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/>',
+ 'log-out':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+ clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+ alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+ trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+ chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+ megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+ trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+ book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+ sliders:'<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+ list:'<path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>',
+ flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+ compass:'<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+ moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+ 'arrow-left':'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+ hourglass:'<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+ phone:'<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>',
+ clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+ refresh:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+ ball:'<circle cx="12" cy="12" r="10"/><path d="m12 8 3.8 2.8-1.45 4.45h-4.7L8.2 10.8z"/><path d="M12 8V2.2"/><path d="m15.8 10.8 5.4-1.8"/><path d="m14.35 15.25 3.3 4.5"/><path d="m9.65 15.25-3.3 4.5"/><path d="M8.2 10.8 2.8 9"/>'};
+const ic=(n,c)=>`<svg class="ic${c?' '+c:''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
+const hi=(n,t,c)=>`<span class="hi${c?' '+c:''}"><i>${ic(n)}</i><span>${t}</span></span>`;
+const lum=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return 0;const n=parseInt(m[1],16);return (0.299*(n>>16)+0.587*(n>>8&255)+0.114*(n&255))/255};
+const crest=t=>{const c=TC[t]||'#5d6b63',d='M18 1.5 33.5 6.5v13.5c0 10.2-6.6 17.4-15.5 20.5C9.1 37.4 2.5 30.2 2.5 20V6.5z';
+ return `<svg class="crest" viewBox="0 0 36 42" aria-hidden="true"><path d="${d}" fill="${c}"/><path class="o" d="${d}"/><text x="18" y="25" text-anchor="middle" fill="${lum(c)>0.6?'#1a1a1a':'#fff'}">${esc(String(t).slice(0,3).toUpperCase())}</text></svg>`};
+
 const DEF=['Atalanta','Bologna','Cagliari','Como','Fiorentina','Frosinone','Genoa','Inter','Juventus','Lazio','Lecce','Milan','Monza','Napoli','Parma','Roma','Sassuolo','Torino','Udinese','Venezia'];
 const TC={Atalanta:'#1c5fa8',Bologna:'#a6192e',Cagliari:'#b3202a',Como:'#0b4ea2',Fiorentina:'#5b2a86',Frosinone:'#f2c200',Genoa:'#b3122b',Inter:'#0a3d91',Juventus:'#222',Lazio:'#7ec8e3',Lecce:'#e2001a',Milan:'#d11a2a',Monza:'#d4202b',Napoli:'#3aa0e0',Parma:'#f6c90e',Roma:'#a8281f',Sassuolo:'#00a651',Torino:'#8b1a1a',Udinese:'#555',Venezia:'#0e6b50'};
 const FB_DEFAULT='https://highlander-2026-default-rtdb.europe-west1.firebasedatabase.app';
@@ -153,7 +301,7 @@ let hlG=null,hlTimer=0,hlEl=null;
 const hlQ=s=>document.querySelector(s);
 const hlKey=()=>hlQ('.teams')?'bet':hlQ('[data-a="reg"]')?'reg':hlQ('[data-a="rlog"]')?'login':hlQ('[data-a="rrec"]')?'rec':hlQ('[data-a="joinc"]')?'gate':'';
 const hlSeen=()=>{try{return !!localStorage.getItem('hlguide')}catch(e){return true}};
-const guideBar=()=>`<div style="text-align:center;margin:0 0 8px"><button class="link${hlSeen()?'':' hlnew'}" data-guide="1">🧭 Guida: ti mostro cosa premere</button></div>`;
+const guideBar=()=>`<div style="text-align:center;margin:0 0 8px"><button class="guide${hlSeen()?'':' hlnew'}" data-guide="1">${ic('compass')}Guida: ti mostro cosa premere</button></div>`;
 function hlBuild(){if(hlEl)return;hlEl=document.createElement('div');hlEl.id='hl';
  hlEl.innerHTML='<div class="hl-spot" style="display:none"></div><div class="hl-tip" role="dialog" aria-live="polite"><div class="hl-n"></div><div class="hl-t"></div><div class="hl-b"><button data-hl="prev">← Indietro</button><button class="sel" data-hl="next">Avanti →</button><button data-hl="x">✕ Chiudi</button></div></div>';
  document.body.appendChild(hlEl)}
@@ -279,10 +427,10 @@ function hidAdd(id){const o=hidAll();o[S.id+'|'+id]=1;const k=Object.keys(o).sli
 /* ================= scadenza / blocchi ================= */
 const dlMs=()=>{const d=S&&S.cfg.deadline,t=d?parseDl(d):NaN;return isNaN(t)?null:t};
 let curPh='none';
-function cdInfo(){const t=dlMs(),d=S&&S.cfg.deadline;if(t===null)return{ph:'none',html:d?'⏰ Scadenza: '+esc(d):''};
+function cdInfo(){const t=dlMs(),d=S&&S.cfg.deadline;if(t===null)return{ph:'none',html:d?ic('clock')+' Scadenza: '+esc(d):''};
  const left=t-Date.now(),when=new Date(t).toLocaleString('it-IT',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
- if(left<=0)return{ph:'closed',html:'⏰ Tempo scaduto: puntate chiuse<span>Scadenza: '+esc(when)+'</span>'};
- const last=left<=3600000;return{ph:last?'last':'open',html:(last?'⚠️ Ultima ora per puntare!':'⏰ Mancano')+'<b>'+fmt(left)+'</b><span>Scadenza: '+esc(when)+'</span>'}}
+ if(left<=0)return{ph:'closed',html:ic('clock')+' Tempo scaduto: puntate chiuse<span>Scadenza: '+esc(when)+'</span>'};
+ const last=left<=3600000;return{ph:last?'last':'open',html:(last?ic('alert')+' Ultima ora per puntare!':ic('clock')+' Mancano')+'<b>'+fmt(left)+'</b><span>Scadenza: '+esc(when)+'</span>'}}
 const cdBox=()=>{const i=cdInfo();curPh=i.ph;return i.html?`<div class="cd ${i.ph}" id="cd">${i.html}</div>`:''};
 /* 't' = tempo scaduto · 'a' = turno chiuso dall'admin · 'n' = nessun turno aperto */
 const finOf=d=>!!(d&&(d.fin===1||(d.rn===0&&d.rc>0&&Array.isArray(d.alive)&&d.alive.length<=1)));
@@ -298,34 +446,33 @@ const dt={};
 
 /* 1 · registrazione */
 function regScreen(){const m=regMode,lg=m==='login',rc=m==='rec',add=!!idGet();
- const hd=rc?'🔑 Recupera la password':lg?'👋 Entra con il tuo account':'📝 Tappa 1 · Crea il tuo account';
+ const ttl=rc?'Recupera la password':lg?'Entra con il tuo account':'Tappa 1 · Crea il tuo account',ico=rc?'key':lg?'log-in':'user-plus';
  const intro=rc?`<div class="nb" id="recinfo"><b>Hai dimenticato la password? Si cambia qui, in 3 mosse:</b><br>1️⃣ il tuo nome · 2️⃣ l’email usata in registrazione · 3️⃣ la nuova password.<br><span class="mu">Non arriva nessuna email: se l’email è quella giusta la password cambia subito e ti faccio entrare.</span></div>`
   :lg?`<p class="mu">Scrivi il nome e la password con cui ti sei registrato.</p>`
-  :`<p class="mu">Tre cose e sei dentro: <b>nome</b> (resta lo stesso per tutta la partita), <b>email</b> e <b>password</b> (6 numeri).</p><div class="nb">✉️ <b>Non riceverai nessuna email.</b> L’email serve solo se un giorno dimentichi la password: ti basterà riscriverla per sceglierne una nuova. Scrivila giusta e ricordala.</div>`;
- const f=`<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}">`
-  +(lg?'':`<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="${rc?'Email usata in registrazione':'Email (ti serve se dimentichi la password)'}" value="${esc(regEmail)}">`)
-  +`<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" inputmode="numeric" pattern="[0-9]*" maxlength="${lg?30:6}" placeholder="${rc?'Nuova password (6 numeri)':lg?'Password':'Password (6 numeri)'}" value="${esc(regPin)}"><button class="link" data-a="rshow">${regShow?'🙈 Nascondi la password':'👁 Mostra la password'}</button>`;
- return `<div class="card big"><h2>${add?'➕ Nuovo profilo — ':''}${hd}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^(✅|Controllo)/.test(regMsg)?'':' w'}">${esc(regMsg)}</div>`:''}`
-  +(lg?`<button class="fgt" data-a="rforgot">🔑 Password dimenticata?</button><button class="link" data-a="rmode">🆕 Prima volta? Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">← Torna all’accesso</button>`:`<button class="link" data-a="rmode">📱 Ho già un account (anche su un altro dispositivo)</button>`)
-  +(add?'<button class="link" data-a="addcancel">← Annulla</button>':'')+`</div>`}
+  :`<p class="mu">Tre cose e sei dentro: <b>nome</b> (resta lo stesso per tutta la partita), <b>email</b> e <b>password</b> (6 numeri).</p><div class="nb">${ic('mail')} <b>Non riceverai nessuna email.</b> L’email serve solo se un giorno dimentichi la password: ti basterà riscriverla per sceglierne una nuova. Scrivila giusta e ricordala.</div>`;
+ const f=`<div class="fld">${ic('user')}<input id="rn" maxlength="30" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore placeholder="Il tuo nome" value="${esc(regDraft)}"></div>`
+  +(lg?'':`<div class="fld">${ic('mail')}<input id="re" type="email" inputmode="email" name="hl-mail" autocomplete="off" data-lpignore="true" data-1p-ignore autocapitalize="off" spellcheck="false" maxlength="80" placeholder="${rc?'Email usata in registrazione':'Email (ti serve se dimentichi la password)'}" value="${esc(regEmail)}"></div>`)
+  +`<div class="fld">${ic('lock')}<input id="rp" class="${regShow?'':'pin'}" type="text" name="hl-pin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other" inputmode="numeric" pattern="[0-9]*" maxlength="${lg?30:6}" placeholder="${rc?'Nuova password (6 numeri)':lg?'Password':'Password (6 numeri)'}" value="${esc(regPin)}"></div><button class="link" data-a="rshow">${regShow?ic('eye-off')+'Nascondi la password':ic('eye')+'Mostra la password'}</button>`;
+ return `<div class="card big"><h2>${hi(ico,(add?'Nuovo profilo — ':'')+ttl)}</h2>${intro}${f}<button class="sel" data-a="${rc?'rrec':lg?'rlog':'reg'}">${ic(rc?'key':lg?'log-in':'user-plus')}${rc?'Cambia password ed entra':lg?'Entra':'Crea account'}</button>${regMsg?`<div class="nb${/^(✅|Controllo)/.test(regMsg)?'':' w'}">${esc(regMsg)}</div>`:''}`
+  +(lg?`<button class="fgt" data-a="rforgot">${ic('key')}Password dimenticata?</button><button class="link" data-a="rmode">${ic('user-plus')}Prima volta? Crea un nuovo account</button>`:rc?`<button class="link" data-a="rmode">${ic('arrow-left')}Torna all’accesso</button>`:`<button class="link" data-a="rmode">${ic('phone')}Ho già un account (anche su un altro dispositivo)</button>`)
+  +(add?`<button class="link" data-a="addcancel">${ic('arrow-left')}Annulla</button>`:'')+`</div>`}
 
 /* 2 · codice partita */
-const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">${btn}</button><p class="mu">${esc(jmsg)}</p>`;
-const pathCard=()=>{const r=idGet(),w=!!(r&&r.w);
- const st=[['✅','Account'],[w?'✅':'👉','Iscrizione'],[w?'👉':'⏳','Codice'],['⏳','Puntata']];
- return `<div class="stp" id="hlpath">${st.map((x,i)=>`<div class="${x[0]==='👉'?'on':''}"><span>${x[0]}</span>${i+1} · ${x[1]}</div>`).join('')}</div>`};
+const codeForm=(btn)=>`<input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita (es. K7P4QX)" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">${ic('key')}${btn}</button><p class="mu">${esc(jmsg)}</p>`;
+const pathCard=()=>{const r=idGet(),w=!!(r&&r.w),cur=w?3:2;
+ return `<ol class="stp" id="hlpath">${['Account','Iscrizione','Codice','Puntata'].map((x,i)=>{const n=i+1,k=n<cur?'dn':n===cur?'on':'';return `<li class="${k}"><i>${k==='dn'?ic('check'):n}</i><span>${x}</span></li>`}).join('')}</ol>`};
 const gProf=()=>{const o=idsGet(),cur=idGet();if(!cur)return '';const nm=r=>(r.gn&&S&&S.id&&r.gn[S.id])||r.n;
- return o.list.length>1?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${esc(nm(r))}</button>`).join('')}</div>`:`<div class="gh">👤 <b>${esc(nm(cur))}</b></div>`};
+ return o.list.length>1?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${esc(nm(r))}</button>`).join('')}</div>`:`<div class="gh">${ic('user')}<b>${esc(nm(cur))}</b></div>`};
 const wantCard=()=>{const r=idGet();if(!r)return '';
- return r.w?`<div class="card gc ok"><b>✅ Tappa 2 · Iscrizione inviata</b><span class="mu">Il ${new Date(r.w).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}. Ora aspetta il codice dell’admin.</span><button class="link" data-a="want">Reinvia l’iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`
- :`<div class="card gc"><b>📨 Tappa 2 · Vuoi giocare?</b><span class="mu">L’admin vedrà il tuo nome tra i giocatori.</span><button class="sel" data-a="want">📨 Invia la mia iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`};
+ return r.w?`<div class="card gc ok"><b>${hi('circle-check','Tappa 2 · Iscrizione inviata')}</b><span class="mu">Il ${new Date(r.w).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}. Ora aspetta il codice dell’admin.</span><button class="link" data-a="want">${ic('refresh')}Reinvia l’iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`
+ :`<div class="card gc"><b>${hi('clipboard','Tappa 2 · Vuoi giocare?')}</b><span class="mu">L’admin vedrà il tuo nome tra i giocatori.</span><button class="sel" data-a="want">${ic('send')}Invia la mia iscrizione</button>${wantMsg?`<p class="mu">${esc(wantMsg)}</p>`:''}</div>`};
 function gateScreen(){const r=idGet();
- const off=G&&S&&!ready()?`<div class="card gc" style="border-color:var(--bad)"><b>⚠️ Questo codice non ha il collegamento online.</b><span class="mu">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</span></div>`:'';
- return `<div class="gx">`+(codeStale()?`<div class="nb w" role="alert">🔑 <b>Il codice partita è cambiato.</b> Inserisci il nuovo codice che ti ha mandato l’organizzatore.</div>`:'')+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
+ const off=G&&S&&!ready()?`<div class="card gc" style="border-color:var(--bad)"><b>${hi('alert','Questo codice non ha il collegamento online.','w')}</b><span class="mu">Chiedi all’organizzatore di rimandarti il codice aggiornato e inseriscilo qui sotto.</span></div>`:'';
+ return `<div class="gx">`+(codeStale()?`<div class="nb w" role="alert">${ic('key')} <b>Il codice partita è cambiato.</b> Inserisci il nuovo codice che ti ha mandato l’organizzatore.</div>`:'')+(okmsg?`<div class="nb" style="margin:6px 0"><b>${esc(okmsg)}</b></div>`:'')+
  gProf()+pathCard()+wantCard()+off+
- `<div class="card gc"><b>🔑 Tappa 3 · Codice partita</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
+ `<div class="card gc"><b>${hi('key','Tappa 3 · Codice partita')}</b><span class="mu">Te lo manda l’admin (6 caratteri, es. K7P4QX).</span><div class="gr"><input id="jcd" autocapitalize="characters" autocomplete="off" placeholder="Codice partita" value="${esc(jcdDraft)}"><button class="sel" data-a="joinc">${ic('log-in')}Entra</button></div>${jmsg?`<p class="mu">${esc(jmsg)}</p>`:''}</div>`+
  rulesBox()+
- `<div class="gl">${closedReg()?'':'<button class="link" data-a="padd">➕ Altro profilo</button>'}<button class="link" data-a="prm">🚪 Rimuovi profilo</button></div></div>`}
+ `<div class="gl">${closedReg()?'':`<button class="link" data-a="padd">${ic('user-plus')}Altro profilo</button>`}<button class="link" data-a="prm">${ic('log-out')}Rimuovi profilo</button></div></div>`}
 
 /* barra profili */
 const closedReg=()=>!!(stD&&S&&stFor===S.id&&stD.rc>0);
@@ -333,44 +480,46 @@ function profBar(){const o=idsGet(),cur=idGet();if(!cur)return '';
  const nm=r=>(r.gn&&S&&S.id&&r.gn[S.id])||r.n;
  const out=r=>{const n=nm(r).trim().toLowerCase();return !!stD&&!!S&&stFor===S.id&&Array.isArray(stD.out)&&stD.out.some(x=>String(x).trim().toLowerCase()===n)};
  const multi=o.list.length>1;
- return `<div class="card"><h2>👤 ${multi?'Profili su questo dispositivo':esc(nm(cur))}</h2>`+
-  (multi?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${out(r)?'❌ ':''}${esc(nm(r))}</button>`).join('')}</div>`:`<p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>`)+
-  (closedReg()?`<p class="mu" style="margin:6px 0 0">🔒 Partita iniziata: non si possono più aggiungere profili.</p>`:`<button class="link" data-a="padd">➕ Aggiungi un altro profilo (altro nome e password)</button>`)+`</div>`}
+ return `<div class="card"><h2>${hi('user',multi?'Profili su questo dispositivo':esc(nm(cur)))}</h2>`+
+  (multi?`<div class="chips">${o.list.map(r=>`<button data-a="sp" data-rid="${esc(r.rid)}" class="${r.rid===cur.rid?'sel':''}" aria-pressed="${r.rid===cur.rid}">${out(r)?ic('circle-x'):''}${esc(nm(r))}</button>`).join('')}</div>`:`<p class="mu" style="margin:0">Nome registrato: solo l’admin può modificarlo.</p>`)+
+  (closedReg()?`<p class="mu" style="margin:6px 0 0">${ic('lock')} Partita iniziata: non si possono più aggiungere profili.</p>`:`<button class="link" data-a="padd">${ic('user-plus')}Aggiungi un altro profilo (altro nome e password)</button>`)+`</div>`}
 function resetProf(){regSt='';bindCode=null;bindMsg='';draft.team='';msgs=[];msgFor='';msgText='';msgNote='';fbmsg='';okmsg=''}
 
 /* 3 · puntata */
-const rulesBox=()=>det('rg','📜 Regolamento','<div style="white-space:pre-wrap">'+esc(G&&G.rules||DEFRULES)+'</div>');
-const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="prm">Rimuovi questo profilo da questo dispositivo</button></div>`;
-function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card ok"><h2>📣 Avvisi dell’admin</h2>${v.map(m=>`<div class="mg"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Nascondi" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''}
+const rulesBox=()=>det('rg',hi('book','Regolamento'),'<div style="white-space:pre-wrap">'+esc(G&&G.rules||DEFRULES)+'</div>');
+const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="prm">${ic('log-out')}Rimuovi questo profilo da questo dispositivo</button></div>`;
+function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card ok"><h2>${hi('megaphone','Avvisi dell’admin')}</h2>${v.map(m=>`<div class="mg"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Nascondi" style="float:right">${ic('x')}</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''}
 function msgBox(){const r=regRec();if(!r||!isBound())return '';const vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
- const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'':'p'}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">✕</button><div>${esc(m.t)}</div></div>`).join('')+'<button data-a="hma">🗑 Cancella tutti i messaggi</button>':'<p class="mu">Nessun messaggio.</p>';
- return `<div class="card"><h2>💬 Messaggi con l’admin</h2>${th}<textarea id="mt" maxlength="300" placeholder="Scrivi un messaggio all’admin">${esc(msgText)}</textarea><button class="sel" data-a="msend" ${msgBusy?'disabled':''}>Invia messaggio</button><p class="mu">${esc(msgNote)}</p></div>`}
+ const th=vis.length&&msgFor===S.id?vis.map(m=>`<div class="mg ${m.f==='a'?'':'p'}"><span class="mu">${m.f==='a'?'Admin':'Tu'}${m.ts?' · '+new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Cancella" style="float:right">${ic('x')}</button><div>${esc(m.t)}</div></div>`).join('')+`<button data-a="hma">${ic('trash')}Cancella tutti i messaggi</button>`:'<p class="mu">Nessun messaggio.</p>';
+ return `<div class="card"><h2>${hi('chat','Messaggi con l’admin')}</h2>${th}<textarea id="mt" maxlength="300" placeholder="Scrivi un messaggio all’admin">${esc(msgText)}</textarea><button class="sel" data-a="msend" ${msgBusy?'disabled':''}>${ic('send')}Invia messaggio</button><p class="mu">${esc(msgNote)}</p></div>`}
 function rnBox(){if(!stD||stFor!==S.id||isFin())return '';
- if(stD.rn>0)return `<div style="font-weight:700;font-size:18px;margin:2px 0 6px">🔢 Turno ${stD.rn}${stD.rs===0?' <span class="mu" style="font-weight:400">(non ancora iniziato)</span>':''}</div>`;
- if(stD.rc>0)return `<div style="margin:2px 0 6px"><b>🔢 Turno ${stD.rc} concluso</b><div class="mu">Aspetta che l’organizzatore apra il prossimo turno.</div></div>`;return ''}
+ if(stD.rn>0)return `<div class="rn">${ic('flag')}Turno ${stD.rn}${stD.rs===0?' <span class="mu" style="font-weight:400">(non ancora iniziato)</span>':''}</div>`;
+ if(stD.rc>0)return `<div style="margin:2px 0 6px"><div class="rn">${ic('flag')}Turno ${stD.rc} concluso</div><div class="mu">Aspetta che l’organizzatore apra il prossimo turno.</div></div>`;return ''}
 function finBox(){if(!isFin())return '';const w=Array.isArray(stD.alive)?stD.alive:[],n=me().trim().toLowerCase(),won=w.some(x=>String(x).trim().toLowerCase()===n);
- return `<div class="card ok" style="text-align:center"><div style="font-size:44px;line-height:1">🏆</div><h2 style="margin:6px 0">Partita conclusa</h2>${w.length?`<p style="margin:4px 0;font-weight:700">${w.length===1?'Vincitore':'Vincitori'}: ${w.map(x=>esc(String(x))).join(', ')}</p>`:'<p class="mu" style="margin:4px 0">Nessun vincitore: sono stati eliminati tutti.</p>'}${won?'<p style="margin:4px 0">🎉 <b>Complimenti, hai vinto!</b></p>':''}<p class="mu" style="margin:4px 0">Le puntate sono chiuse e il codice non vale più per nuovi ingressi.</p></div>`}
+ return `<div class="card ok" style="text-align:center"><div class="bigic gold">${ic('trophy')}</div><h2 style="margin:6px 0">Partita conclusa</h2>${w.length?`<p style="margin:4px 0;font-weight:700">${w.length===1?'Vincitore':'Vincitori'}: ${w.map(x=>esc(String(x))).join(', ')}</p>`:'<p class="mu" style="margin:4px 0">Nessun vincitore: sono stati eliminati tutti.</p>'}${won?'<p style="margin:4px 0">🎉 <b>Complimenti, hai vinto!</b></p>':''}<p class="mu" style="margin:4px 0">Le puntate sono chiuse e il codice non vale più per nuovi ingressi.</p></div>`}
 function betScreen(){
  const can=isBound(),u=urec(),us=allUsed(u),usN=new Set(us.map(normT)),srvN=new Set(srvUsed().map(normT)),pt=u.pend&&u.pend.t,elim=isOut(),lk=lockKind(),T=teams(),nm=me();
  if(usN.has(normT(draft.team))||elim||!can)draft.team='';
  const ok=!!(can&&draft.team&&!lk&&!elim);
- const send=ok?`<button class="sel" data-a="fbsend" ${sending?'disabled':''}>📲 Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
-  :`<button class="sel" disabled>📲 Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':lk?lockText(lk):!can?'⏳ Attendi la conferma del tuo nome.':'Scegli una squadra.'}</p>`;
- const used=us.length||u.pend?det('us','🗂 Le mie squadre già usate ('+us.length+')',(us.map(t=>`<div class="row"><span>${esc(t)}</span>${srvN.has(normT(t))?'<span class="mu" title="Confermata dall’admin">🔒</span>':`<button class="inl" data-a="rmu" data-t="${esc(t)}" aria-label="Rimuovi ${esc(t)}">✕</button>`}</div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+(u.pend?`<p class="mu">⏳ In corso: <b>${esc(u.pend.t)}</b> (diventa usata a turno chiuso)</p>`:'')+'<p class="mu">Se una squadra è segnata per errore, tocca ✕.</p>'):'';
+ const send=ok?`<button class="sel" data-a="fbsend" ${sending?'disabled':''}>${ic('send')}Invia la puntata</button><p class="mu">${esc(fbmsg)||'La puntata arriva direttamente all’organizzatore.'}</p>`
+  :`<button class="sel" disabled>${ic('send')}Invia la puntata</button><p class="mu">${elim?'❌ Sei stato eliminato: non puoi più puntare.':lk?lockText(lk):!can?'⏳ Attendi la conferma del tuo nome.':'Scegli una squadra.'}</p>`;
+ const used=us.length||u.pend?det('us',hi('list','Le mie squadre già usate ('+us.length+')'),(us.map(t=>`<div class="row"><span>${esc(t)}</span>${srvN.has(normT(t))?`<span class="mu" title="Confermata dall’admin">${ic('lock')}</span>`:`<button class="inl" data-a="rmu" data-t="${esc(t)}" aria-label="Rimuovi ${esc(t)}">${ic('x')}</button>`}</div>`).join('')||'<p class="mu">Nessuna per ora.</p>')+(u.pend?`<p class="mu">${ic('clock')} In corso: <b>${esc(u.pend.t)}</b> (diventa usata a turno chiuso)</p>`:'')+'<p class="mu">Se una squadra è segnata per errore, tocca la ✕.</p>'):'';
+ const tile=t=>{const x=usN.has(normT(t)),pp=!x&&pt===t,sl=t===draft.team;
+  return `<button data-a="pk" data-t="${esc(t)}" ${x||elim||!can?'disabled':''} class="${sl?'sel':''}${x?' used':''}${pp?' pend':''}${lk&&!x?' lock':''}" aria-pressed="${sl}">${crest(t)}<span class="tn">${esc(t)}</span>${x?`<em title="usata">${ic('x')}<span class="vh">usata</span></em>`:pp?`<em title="in corso">${ic('clock')}<span class="vh">in corso</span></em>`:sl?`<em class="ck">${ic('check')}</em>`:''}</button>`};
  return (okmsg?`<div class="card ok"><b>${esc(okmsg)}</b></div>`:'')+profBar()
  +finBox()
- +(elim?`<div class="card no"><div style="font-size:48px;line-height:1">❌</div><h2 style="color:var(--bad);font-size:26px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
+ +(elim?`<div class="card no"><div class="bigic bad">${ic('circle-x')}</div><h2 style="color:var(--bad);font-size:30px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
- +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6&&bindCode!==7?'<button class="sel" data-a="rsnd">Riprova</button>':''}${bindCode===1||bindCode===6?'<p class="mu" style="margin:6px 0">Se ricordi la password: tocca il pulsante e accedi con nome e password.<br>Se l’hai dimenticata: nella schermata di accesso tocca «Password dimenticata?» (serve l’email), oppure chiedi all’organizzatore di resettarla.</p><button class="sel" data-a="idreset">Rifai l’accesso con nome e password</button>':''}</div>`:'')
- +`<div class="card" style="${can?'':'opacity:.6'}"><h2>La tua puntata — ${esc(S.name)}</h2>${rnBox()}${cdBox()}
-  <div class="step" style="margin-top:4px">👤 ${esc(nm)}</div>
-  ${can&&(regSt==='no'||regSt==='err')?'<p class="mu" style="margin:2px 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">Reinvia il nome all’admin</button>':''}
-  <div class="step">1 · Scegli la squadra</div>
-  <div class="${us.length||pt?'tw':''}"><div class="teams">${T.map(t=>{const x=usN.has(normT(t)),pp=!x&&pt===t;return `<button data-a="pk" data-t="${esc(t)}" style="--c:${TC[t]||'var(--bd)'}" ${x||elim||!can?'disabled':''} class="${t===draft.team?'sel':''}${x?' used':''}${pp?' pend':''}${lk&&!x?' lock':''}" aria-pressed="${t===draft.team}">${x?'✖ ':''}${esc(t)}${x?' (usata)':pp?' ⏳':''}</button>`}).join('')}</div>${us.length||pt?`<aside class="side" aria-label="Squadre usate"><b>🗂 Usate (${us.length})</b>${us.map(t=>`<div>✖ ${esc(t)}</div>`).join('')||'<div class="mu">Nessuna</div>'}${pt?`<div class="sp">⏳ ${esc(pt)}<br><span class="mu">in corso</span></div>`:''}</aside>`:''}</div>
-  <div class="sendbar"><div class="step" style="margin:0 0 4px">2 · Invia</div>${send}</div>
-  ${u.pend?`<div class="cd" style="border-color:var(--ac);color:var(--tx)">✅ Puntata inviata<b>${esc(u.pend.t)}</b><span>Finché il turno è aperto puoi cambiarla</span></div>`:''}</div>`
+ +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6&&bindCode!==7?`<button class="sel" data-a="rsnd">${ic('refresh')}Riprova</button>`:''}${bindCode===1||bindCode===6?`<p class="mu" style="margin:6px 0">Se ricordi la password: tocca il pulsante e accedi con nome e password.<br>Se l’hai dimenticata: nella schermata di accesso tocca «Password dimenticata?» (serve l’email), oppure chiedi all’organizzatore di resettarla.</p><button class="sel" data-a="idreset">${ic('log-in')}Rifai l’accesso con nome e password</button>`:''}</div>`:'')
+ +`<div class="card" style="${can?'':'opacity:.6'}"><h2>${hi('ball','La tua puntata — '+esc(S.name))}</h2>${rnBox()}${cdBox()}
+  <div class="step me">${ic('user')}${esc(nm)}</div>
+  ${can&&(regSt==='no'||regSt==='err')?`<p class="mu" style="margin:2px 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">${ic('refresh')}Reinvia il nome all’admin</button>`:''}
+  <div class="step"><i class="n">1</i>Scegli la squadra</div>
+  <div class="${us.length||pt?'tw':''}"><div class="teams">${T.map(tile).join('')}</div>${us.length||pt?`<aside class="side" aria-label="Squadre usate"><b>${ic('list')}Usate (${us.length})</b>${us.map(t=>`<div>${ic('x')}${esc(t)}</div>`).join('')||'<div class="mu">Nessuna</div>'}${pt?`<div class="sp">${ic('clock')}${esc(pt)}<br><span class="mu">in corso</span></div>`:''}</aside>`:''}</div>
+  <div class="sendbar"><div class="step" style="margin:0 0 4px"><i class="n">2</i>Invia</div>${send}</div>
+  ${u.pend?`<div class="cd sent">${ic('circle-check')} Puntata inviata<b>${crest(u.pend.t)}${esc(u.pend.t)}</b><span>Finché il turno è aperto puoi cambiarla</span></div>`:''}</div>`
  +msgBox()+used+rulesBox()
- +det('ot','⚙️ Altro',`<b>Cambia partita</b><p class="mu">Hai un nuovo codice partita? Inseriscilo qui.</p>${codeForm('Usa codice')}`)
+ +det('ot',hi('sliders','Altro'),`<b>Cambia partita</b><p class="mu">Hai un nuovo codice partita? Inseriscilo qui.</p>${codeForm('Usa codice')}`)
  +exitBox()}
 
 function view(){
@@ -521,7 +670,7 @@ addEventListener('hashchange',()=>{if(location.hash.indexOf('#jg')===0&&joinCode
 
 /* ================= tema ================= */
 const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
-function paintTheme(){const b=document.getElementById('thm');b.textContent=isDark()?'☀️':'🌙';b.title=isDark()?'Passa al tema chiaro':'Passa al tema scuro'}
+function paintTheme(){const b=document.getElementById('thm');b.innerHTML=ic(isDark()?'sun':'moon');b.title=isDark()?'Passa al tema chiaro':'Passa al tema scuro'}
 {const t=lget('uitheme');if(t)document.documentElement.dataset.theme=t}
 document.getElementById('thm').addEventListener('click',()=>{const d=!isDark();document.documentElement.dataset.theme=d?'dark':'light';lset('uitheme',d?'dark':'light');paintTheme()});
 paintTheme();
