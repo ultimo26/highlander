@@ -99,8 +99,9 @@ h1{font:700 31px/1 var(--hf);letter-spacing:.2px;margin:0}
 h2{font:700 24px/1.1 var(--hf);letter-spacing:.2px;margin:0 0 10px}
 .big h2{font-size:27px}.bx h2{font-size:26px}
 .hd{padding:2px 0 8px}
-#thm{display:grid;place-items:center;color:#4a3300;background:linear-gradient(180deg,#ffe27a,#f5b800);border-color:#d99a00;box-shadow:0 3px 0 #b87f00,0 8px 12px -6px rgba(184,127,0,.6)}
-#thm:hover{border-color:#b87f00}#thm:active{transform:translateY(3px);box-shadow:0 0 0 #b87f00}
+#thm{display:grid;place-items:center;color:var(--tx);background:var(--bg)}
+#thm[data-i="sun"]{color:#4a3300;background:linear-gradient(180deg,#ffe27a,#f5b800);border-color:#d99a00;box-shadow:0 3px 0 #b87f00,0 8px 12px -6px rgba(184,127,0,.6)}
+#thm[data-i="sun"]:hover{border-color:#b87f00}#thm[data-i="sun"]:active{transform:translateY(3px);box-shadow:0 0 0 #b87f00}
 #thm svg{width:22px;height:22px}
 /* pulsanti */
 button,input,textarea{border-width:1.5px;border-radius:14px}
@@ -672,7 +673,7 @@ addEventListener('hashchange',()=>{if(location.hash.indexOf('#jg')===0&&joinCode
 
 /* ================= tema ================= */
 const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
-function paintTheme(){const b=document.getElementById('thm');b.innerHTML=ic(isDark()?'sun':'moon');b.title=isDark()?'Passa al tema chiaro':'Passa al tema scuro'}
+function paintTheme(){const b=document.getElementById('thm');b.innerHTML=ic(isDark()?'sun':'moon');b.dataset.i=isDark()?'sun':'moon';b.title=isDark()?'Passa al tema chiaro':'Passa al tema scuro'}
 {const t=lget('uitheme');if(t)document.documentElement.dataset.theme=t}
 document.getElementById('thm').addEventListener('click',()=>{const d=!isDark();document.documentElement.dataset.theme=d?'dark':'light';lset('uitheme',d?'dark':'light');paintTheme()});
 paintTheme();
