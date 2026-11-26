@@ -198,6 +198,9 @@ summary b,.bx summary b{font:700 22px/1.1 var(--hf)}
 .bigic{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 6px;border-radius:50%}
 .bigic .ic{width:36px;height:36px}
 .bigic.bad{background:rgba(192,57,43,.12);color:var(--bad)}.bigic.gold{background:var(--gold-s);color:var(--gold)}
+/* regolamento: testo più grande e contrastato */
+.rules{white-space:pre-wrap;font-size:18px;line-height:1.6;color:var(--tx);font-weight:500;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-top:6px}
+:root[data-theme="light"] .rules{color:#0b150f}
 /* messaggi */
 .mg,.mg.p{border:1px solid var(--ring);border-radius:16px;background:var(--soft);padding:10px 12px;margin:8px 0}
 .mg.p{border-color:var(--bd);background:var(--bg)}
@@ -489,7 +492,7 @@ function profBar(){const o=idsGet(),cur=idGet();if(!cur)return '';
 function resetProf(){regSt='';bindCode=null;bindMsg='';draft.team='';msgs=[];msgFor='';msgText='';msgNote='';fbmsg='';okmsg=''}
 
 /* 3 · puntata */
-const rulesBox=()=>det('rg',hi('book','Regolamento'),'<div style="white-space:pre-wrap">'+esc(G&&G.rules||DEFRULES)+'</div>');
+const rulesBox=()=>det('rg',hi('book','Regolamento'),'<div class="rules">'+esc(G&&G.rules||DEFRULES)+'</div>');
 const exitBox=()=>`<div style="text-align:center"><button class="link" data-a="prm">${ic('log-out')}Rimuovi questo profilo da questo dispositivo</button></div>`;
 function bcBox(){const v=bc.filter(m=>!hidAll()[S.id+'|'+m.id]);return v.length?`<div class="card ok"><h2>${hi('megaphone','Avvisi dell’admin')}</h2>${v.map(m=>`<div class="mg"><span class="mu">${m.ts?new Date(m.ts).toLocaleString('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span><button class="inl" data-a="hm" data-id="${esc(m.id||'')}" aria-label="Nascondi" style="float:right">${ic('x')}</button><div>${esc(m.t)}</div></div>`).join('')}</div>`:''}
 function msgBox(){const r=regRec();if(!r||!isBound())return '';const vis=msgs.filter(m=>!hidAll()[S.id+'|'+m.id]);
