@@ -91,28 +91,25 @@ summary{cursor:pointer;padding:4px 0}details.card[open] summary{margin-bottom:8p
 @keyframes hln{0%{box-shadow:0 0 0 0 var(--ac)}100%{box-shadow:0 0 0 14px transparent}}
 @media (prefers-reduced-motion:reduce){.hl-spot::before,.hl-spot::after,.hlnew{animation:none}.hl-spot::after{display:none}}
 /* ===== restyle giocatore: icone, pulsanti, stemmi ===== */
-:root{--hf:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif-condensed,system-ui,sans-serif;--ac1:#2bb264;--ac2:#126a38;--soft:rgba(27,138,75,.10);--ring:rgba(27,138,75,.24);--cs:rgba(0,0,0,.22);--gold:#c99a0c;--gold-s:rgba(201,154,12,.14);--warn:#9a5b00}
-:root[data-theme="dark"]{--ac1:#5fe79a;--ac2:#23a05a;--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac1:#5fe79a;--ac2:#23a05a;--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}}
+:root{--hf:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif-condensed,system-ui,sans-serif;--ac2:#126a38;--tile:#e2f4e8;--tile-hi:#f1fbf4;--tile-bd:#b5dcc3;--tile-edge:#8fc7a5;--tile-sel:#c4ebd2;--tile-lo:#c3e4d0;--ts:rgba(255,255,255,.6);--bv-hi:rgba(255,255,255,.95);--bv-lo:rgba(0,70,35,.22);--soft:rgba(27,138,75,.10);--ring:rgba(27,138,75,.24);--cs:rgba(0,0,0,.22);--gold:#c99a0c;--gold-s:rgba(201,154,12,.14);--warn:#9a5b00}
+:root[data-theme="dark"]{--ac2:#23a05a;--tile:#1d3a2a;--tile-hi:#2a4f39;--tile-bd:#3c7556;--tile-edge:#050d08;--tile-sel:#285a3d;--tile-lo:#142c20;--ts:rgba(0,0,0,.65);--bv-hi:rgba(255,255,255,.20);--bv-lo:rgba(0,0,0,.45);--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac2:#23a05a;--tile:#1d3a2a;--tile-hi:#2a4f39;--tile-bd:#3c7556;--tile-edge:#050d08;--tile-sel:#285a3d;--tile-lo:#142c20;--ts:rgba(0,0,0,.65);--bv-hi:rgba(255,255,255,.20);--bv-lo:rgba(0,0,0,.45);--soft:rgba(61,209,122,.12);--ring:rgba(61,209,122,.30);--cs:rgba(255,255,255,.40);--gold:#f2c230;--gold-s:rgba(242,194,48,.14);--warn:#f2c230}}
 .ic{width:1.15em;height:1.15em;flex:none;vertical-align:-.2em}
 h1{font:700 31px/1 var(--hf);letter-spacing:.2px;margin:0}
 h2{font:700 24px/1.1 var(--hf);letter-spacing:.2px;margin:0 0 10px}
 .big h2{font-size:27px}.bx h2{font-size:26px}
 .hd{padding:2px 0 8px}
-.brand{display:flex;align-items:center;gap:11px}
-.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:var(--on);background:linear-gradient(160deg,var(--ac1),var(--ac2));box-shadow:0 2px 0 var(--ac2),0 8px 16px -8px var(--ac)}
-.logo svg{width:27px;height:27px}
-#thm{display:grid;place-items:center;color:var(--tx);background:var(--card)}
+#thm{display:grid;place-items:center}
 #thm svg{width:22px;height:22px}
 /* pulsanti */
 button,input,textarea{border-width:1.5px;border-radius:14px}
-button{display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;background:var(--card);box-shadow:0 2px 0 var(--bd);transition:transform .08s,box-shadow .08s,background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+button{display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;background:var(--bg);box-shadow:0 2px 0 var(--bd);transition:transform .08s,box-shadow .08s,background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
 button:hover{border-color:var(--mu)}
 button:active{transform:translateY(2px);box-shadow:0 0 0 var(--bd)}
 button:disabled{opacity:.5;box-shadow:none;transform:none;border-color:var(--bd)}
 :focus-visible{outline:3px solid var(--ac);outline-offset:2px}
-.sel{color:var(--on);border-color:var(--ac2);background:linear-gradient(180deg,var(--ac1),var(--ac));box-shadow:0 3px 0 var(--ac2),0 10px 16px -10px var(--ac)}
-.sel:hover{border-color:var(--ac2)}
+.sel{color:var(--on);border-color:var(--ac);background:var(--ac);box-shadow:0 3px 0 var(--ac2)}
+.sel:hover{border-color:var(--ac)}
 .sel:active{box-shadow:0 0 0 var(--ac2);transform:translateY(3px)}
 .sel:disabled{opacity:1;background:var(--bd);border-color:var(--bd);color:var(--mu);box-shadow:none}
 .link{background:transparent;border:0;box-shadow:none;color:var(--mu);text-decoration:none;font-weight:500;border-radius:12px;padding:10px}
@@ -124,7 +121,7 @@ button:disabled{opacity:.5;box-shadow:none;transform:none;border-color:var(--bd)
 .bx .inl,.inl{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;margin:0;border-radius:50%;box-shadow:none;font-size:16px}
 .inl .ic{width:18px;height:18px}
 /* campi */
-input,textarea{background:var(--card);box-shadow:inset 0 1px 2px rgba(20,32,26,.06);transition:border-color .15s,box-shadow .15s}
+input,textarea{background:var(--bg);box-shadow:inset 0 1px 2px rgba(20,32,26,.06);transition:border-color .15s,box-shadow .15s}
 input:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 4px var(--ring)}
 .fld{position:relative;margin:8px 0}
 .fld input{margin:0;padding-left:48px}
@@ -133,7 +130,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 
 /* schede e titoli con icona */
 .card{border-radius:18px}
 .hi{display:flex;align-items:center;gap:10px}
-.hi i{width:36px;height:36px;border-radius:12px;background:var(--soft);color:var(--ac);display:grid;place-items:center;flex:none;font-style:normal}
+.hi i{font-size:20px;line-height:1;width:36px;height:36px;border-radius:12px;background:var(--soft);color:var(--ac);display:grid;place-items:center;flex:none;font-style:normal}
 .hi i .ic{width:21px;height:21px}
 .hi.w i{background:rgba(192,57,43,.12);color:var(--bad)}
 .gx .gc b,.gc b{font-family:var(--hf);font-size:22px;font-weight:700;line-height:1.15}
@@ -159,17 +156,19 @@ summary b,.bx summary b{font:700 22px/1.1 var(--hf)}
 /* squadre: tessere con stemma */
 .teams,.bx .teams{gap:10px}
 .teams button,.bx .teams button{justify-content:flex-start;gap:8px;text-align:left;padding:10px;margin:0;min-height:60px;font-weight:600}
-.crest{width:30px;height:35px;flex:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.crest{width:34px;height:40px;flex:none;filter:drop-shadow(0 3px 2px rgba(0,0,0,.38))}
 .crest text{font:700 12.5px var(--hf);letter-spacing:.3px}
 .crest .o{fill:none;stroke:var(--cs);stroke-width:1.5}
-.tn{min-width:0;overflow-wrap:break-word;font:700 21px/1.05 var(--hf)}
+.tn{text-shadow:0 1px 0 var(--ts);min-width:0;overflow-wrap:break-word;font:700 21px/1.05 var(--hf)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .teams button em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;color:var(--mu);display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
 .teams button em .ic{width:17px;height:17px}
-.teams button.sel,.bx .teams button.sel{background:var(--soft);color:var(--tx);border-color:var(--ac);box-shadow:0 0 0 3px var(--ring)}
-.teams button.sel .ck{width:24px;height:24px;border-radius:50%;background:var(--ac);color:var(--on);justify-content:center}
-.teams button.sel .ck .ic{width:15px;height:15px;stroke-width:3.2}
-.teams button.used{opacity:.55;box-shadow:none}.teams button.used .crest{filter:grayscale(1)}.teams button.used .tn{text-decoration:line-through}
+.teams,.bx .teams{gap:16px 12px}
+.teams button,.bx .teams button{border-radius:16px;border:1.5px solid var(--tile-bd);color:var(--tx);background:linear-gradient(180deg,var(--tile-hi) 0%,var(--tile) 52%,var(--tile-lo) 100%);box-shadow:inset 0 2px 0 var(--bv-hi),inset 0 -4px 6px var(--bv-lo),0 5px 0 var(--tile-edge),0 7px 0 rgba(0,0,0,.14),0 14px 14px -6px rgba(0,0,0,.34)}
+.teams button:hover{border-color:var(--ac)}
+.teams button:active,.bx .teams button:active{transform:translateY(5px);box-shadow:inset 0 2px 0 var(--bv-hi),inset 0 -3px 5px var(--bv-lo),0 0 0 var(--tile-edge),0 2px 4px rgba(0,0,0,.25)}
+.teams button.sel,.bx .teams button.sel{background:linear-gradient(180deg,var(--tile-hi) 0%,var(--tile-sel) 55%,var(--tile-sel) 100%);border-color:var(--ac);box-shadow:inset 0 2px 0 var(--bv-hi),inset 0 -4px 6px var(--bv-lo),0 5px 0 var(--ac2),0 7px 0 rgba(0,0,0,.14),0 0 0 3px var(--ring),0 14px 14px -6px rgba(0,0,0,.34)}
+.teams button.used,.bx .teams button.used{opacity:.55;background:var(--bg);border-color:var(--bd);box-shadow:none;transform:none}.teams button.used .crest{filter:grayscale(1)}.teams button.used .tn{text-decoration:line-through}
 .teams button.pend{outline:2px dashed var(--ac);outline-offset:-4px}
 .bx .side b{display:flex;align-items:center;gap:6px;font:700 19px/1.1 var(--hf)}
 .bx .side div{display:inline-flex;align-items:center;gap:4px}
@@ -210,7 +209,7 @@ summary b,.bx summary b{font:700 22px/1.1 var(--hf)}
 <script>if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
 </head>
 <body>
-<div class="hd"><div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m12 8 3.8 2.8-1.45 4.45h-4.7L8.2 10.8z"/><path d="M12 8V2.2"/><path d="m15.8 10.8 5.4-1.8"/><path d="m14.35 15.25 3.3 4.5"/><path d="m9.65 15.25-3.3 4.5"/><path d="M8.2 10.8 2.8 9"/></svg></span><h1>Highlander Friends</h1></div><button id="thm" type="button" aria-label="Cambia tema"></button></div>
+<div class="hd"><h1>⚽ Highlander Friends</h1><button id="thm" type="button" aria-label="Cambia tema"></button></div>
 <div id="app"></div>
 <div class="sig"><span>creato da</span><b>AG</b></div>
 <script>
@@ -254,7 +253,7 @@ const ic=(n,c)=>`<svg class="ic${c?' '+c:''}" viewBox="0 0 24 24" fill="none" st
 const hi=(n,t,c)=>`<span class="hi${c?' '+c:''}"><i>${ic(n)}</i><span>${t}</span></span>`;
 const lum=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return 0;const n=parseInt(m[1],16);return (0.299*(n>>16)+0.587*(n>>8&255)+0.114*(n&255))/255};
 const crest=t=>{const c=TC[t]||'#5d6b63',d='M18 1.5 33.5 6.5v13.5c0 10.2-6.6 17.4-15.5 20.5C9.1 37.4 2.5 30.2 2.5 20V6.5z';
- return `<svg class="crest" viewBox="0 0 36 42" aria-hidden="true"><path d="${d}" fill="${c}"/><path class="o" d="${d}"/><text x="18" y="25" text-anchor="middle" fill="${lum(c)>0.6?'#1a1a1a':'#fff'}">${esc(String(t).slice(0,3).toUpperCase())}</text></svg>`};
+ return `<svg class="crest" viewBox="0 0 36 42" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".45" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".32"/></linearGradient></defs><path d="${d}" fill="${c}"/><path d="${d}" fill="url(#cg)"/><path class="o" d="${d}"/><text x="18" y="25" text-anchor="middle" fill="${lum(c)>0.6?'#1a1a1a':'#fff'}">${esc(String(t).slice(0,3).toUpperCase())}</text></svg>`};
 
 const DEF=['Atalanta','Bologna','Cagliari','Como','Fiorentina','Frosinone','Genoa','Inter','Juventus','Lazio','Lecce','Milan','Monza','Napoli','Parma','Roma','Sassuolo','Torino','Udinese','Venezia'];
 const TC={Atalanta:'#1c5fa8',Bologna:'#a6192e',Cagliari:'#b3202a',Como:'#0b4ea2',Fiorentina:'#5b2a86',Frosinone:'#f2c200',Genoa:'#b3122b',Inter:'#0a3d91',Juventus:'#222',Lazio:'#7ec8e3',Lecce:'#e2001a',Milan:'#d11a2a',Monza:'#d4202b',Napoli:'#3aa0e0',Parma:'#f6c90e',Roma:'#a8281f',Sassuolo:'#00a651',Torino:'#8b1a1a',Udinese:'#555',Venezia:'#0e6b50'};
@@ -511,7 +510,7 @@ function betScreen(){
  +(elim?`<div class="card no"><div class="bigic bad">${ic('circle-x')}</div><h2 style="color:var(--bad);font-size:30px;margin:6px 0">ELIMINATO</h2><p class="mu" style="margin:0">${outWhy()?'Eliminato al '+esc(outWhy())+'.':'La squadra che hai scelto non ha vinto.'}</p></div>`:'')
  +bcBox()
  +(!can?`<div class="card" style="border-color:var(--${bindCode>0?'bad':'ac'})"><b>${bindCode>0?esc(bindMsg):'⏳ Sto inviando il tuo nome all’admin…'}</b>${bindCode>0&&bindCode!==1&&bindCode!==6&&bindCode!==7?`<button class="sel" data-a="rsnd">${ic('refresh')}Riprova</button>`:''}${bindCode===1||bindCode===6?`<p class="mu" style="margin:6px 0">Se ricordi la password: tocca il pulsante e accedi con nome e password.<br>Se l’hai dimenticata: nella schermata di accesso tocca «Password dimenticata?» (serve l’email), oppure chiedi all’organizzatore di resettarla.</p><button class="sel" data-a="idreset">${ic('log-in')}Rifai l’accesso con nome e password</button>`:''}</div>`:'')
- +`<div class="card" style="${can?'':'opacity:.6'}"><h2>${hi('ball','La tua puntata — '+esc(S.name))}</h2>${rnBox()}${cdBox()}
+ +`<div class="card" style="${can?'':'opacity:.6'}"><h2><span class="hi"><i>⚽</i><span>La tua puntata — ${esc(S.name)}</span></span></h2>${rnBox()}${cdBox()}
   <div class="step me">${ic('user')}${esc(nm)}</div>
   ${can&&(regSt==='no'||regSt==='err')?`<p class="mu" style="margin:2px 0;color:var(--bad)">⚠️ Il tuo nome non risulta ancora all’admin.</p><button data-a="rsnd">${ic('refresh')}Reinvia il nome all’admin</button>`:''}
   <div class="step"><i class="n">1</i>Scegli la squadra</div>
